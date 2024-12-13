@@ -47,24 +47,24 @@ instance vSetoid : Setoid { x : ℝ // x ∈ Icc 0 1 } where
       simp [h1, h2]
   }
 
-def VT : Type := Quotient vSetoid
+def vT : Type := Quotient vSetoid
 
-theorem vSurj : ∀ t : VT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t := by
+theorem vSurj : ∀ t : vT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t := by
   intro t
   have ⟨x, eq⟩ := Quotient.mk_surjective t
   use x, eq
 
-def vRep : VT → { x : ℝ // x ∈ Icc 0 1 } :=
+def vRep : vT → { x : ℝ // x ∈ Icc 0 1 } :=
   fun t ↦ Classical.choose (vSurj t)
 
-theorem vRepSpec : ∀ t : VT, ⟦vRep t⟧ = t :=
+theorem vRepSpec : ∀ t : vT, ⟦vRep t⟧ = t :=
   fun t ↦ Classical.choose_spec (vSurj t)
 
-def VitaliSet : Set ℝ := { x : ℝ | ∃ t : VT, ↑(vRep t) = x }
+def VitaliSet : Set ℝ := { x : ℝ | ∃ t : vT, ↑(vRep t) = x }
 
-def VitaliSetShift (c : ℝ) := image (fun x ↦ x + c) VitaliSet
+def vVitaliSet (c : ℝ) : Set ℝ := image (fun x ↦ x + c) VitaliSet
 
-
+def vI : Type := { i : ℝ // i ∈ Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ) }
 
 
 

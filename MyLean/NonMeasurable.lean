@@ -11,16 +11,8 @@ open Set Filter Real MeasureTheory
 
 noncomputable section
 
-example : MeasurableSpace ℝ := by infer_instance
-
-#check (volume : Measure ℝ)
-
-example {f : ℕ → Set ℝ} (hmeas : ∀ i, MeasurableSet (f i)) (hdis : Pairwise (Disjoint on f)) :
-    volume (⋃ i, f i) = ∑' i, volume (f i) :=
-  volume.m_iUnion hmeas hdis
-
-def VitaliSetoid : Setoid ℝ where
-  r := fun x y ↦ x - y ∈ range ((↑) : ℚ → ℝ)
+instance vSetoid : Setoid { x : ℝ // x ∈ Icc 0 1 } where
+  r := fun x y ↦ (↑ x : ℝ) - (↑ y) ∈ range ((↑) : ℚ → ℝ)
   iseqv := {
     refl := by
       intro x
@@ -40,11 +32,40 @@ def VitaliSetoid : Setoid ℝ where
       simp [h1, h2]
   }
 
+def VT : Type := Quotient vSetoid
+
+lemma vSurj : ∀ t : VT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t := by
+  intro t
+  have ⟨x, eq⟩ := Quotient.mk_surjective t
+  use x, eq
+
+def vRep : VT → { x : ℝ // x ∈ Icc 0 1 } :=
+  fun t ↦ Classical.choose (vSurj t)
+
+theorem vRepSpec : ∀ t : VT, ⟦vRep t⟧ = t :=
+  fun t ↦ Classical.choose_spec (vSurj t)
+
+def VitaliSet : Set ℝ := { x : ℝ | ∃ t : VT, ↑(vRep t) = x }
+
+
 end
 
 /- ================================================================================================= -/
 
 noncomputable section
+
+#check Classical.choose
+#check Classical.choose_spec
+
+example : MeasurableSpace ℝ := by infer_instance
+
+#check (volume : Measure ℝ)
+
+example {f : ℕ → Set ℝ} (hmeas : ∀ i, MeasurableSet (f i)) (hdis : Pairwise (Disjoint on f)) :
+    volume (⋃ i, f i) = ∑' i, volume (f i) :=
+  volume.m_iUnion hmeas hdis
+
+/- ================================================================================================= -/
 
 variable {α : Type*} [MeasurableSpace α]
 
@@ -83,5 +104,7 @@ example {f : ℕ → Set α} (hmeas : ∀ i, MeasurableSet (f i)) (hdis : Pairwi
 
 example {P : α → Prop} : (∀ᵐ x ∂μ, P x) ↔ ∀ᶠ x in ae μ, P x :=
   Iff.rfl
+
+/- ================================================================================================= -/
 
 end

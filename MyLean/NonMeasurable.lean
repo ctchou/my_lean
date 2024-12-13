@@ -11,6 +11,21 @@ open Set Filter Real MeasureTheory
 
 noncomputable section
 
+theorem ShiftPreservesMeasurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
+  apply (MeasurableEmbedding.measurableSet_image ?_).mpr h
+  exact measurableEmbedding_addRight c
+
+theorem ShiftPreservesVolume (s : Set ℝ) (c : ℝ) : volume (image (fun x ↦ x + c) s) = volume s := by
+  simp only [image_add_right, measure_preimage_add_right]
+
+theorem VolumeOfCountableUnion [Countable ι] {f : ι → Set ℝ}
+    (hdis : Pairwise (Disjoint on f)) (hmea : ∀ (i : ι), MeasurableSet (f i)) :
+    volume (⋃ i, f i) = ∑' i, volume (f i) :=
+  measure_iUnion hdis hmea
+
+theorem VolumeMono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
+  exact OuterMeasureClass.measure_mono volume h
+
 instance vSetoid : Setoid { x : ℝ // x ∈ Icc 0 1 } where
   r := fun x y ↦ (↑ x : ℝ) - (↑ y) ∈ range ((↑) : ℚ → ℝ)
   iseqv := {
@@ -34,7 +49,7 @@ instance vSetoid : Setoid { x : ℝ // x ∈ Icc 0 1 } where
 
 def VT : Type := Quotient vSetoid
 
-lemma vSurj : ∀ t : VT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t := by
+theorem vSurj : ∀ t : VT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t := by
   intro t
   have ⟨x, eq⟩ := Quotient.mk_surjective t
   use x, eq
@@ -46,6 +61,11 @@ theorem vRepSpec : ∀ t : VT, ⟦vRep t⟧ = t :=
   fun t ↦ Classical.choose_spec (vSurj t)
 
 def VitaliSet : Set ℝ := { x : ℝ | ∃ t : VT, ↑(vRep t) = x }
+
+def VitaliSetShift (c : ℝ) := image (fun x ↦ x + c) VitaliSet
+
+
+
 
 
 end
@@ -60,10 +80,6 @@ noncomputable section
 example : MeasurableSpace ℝ := by infer_instance
 
 #check (volume : Measure ℝ)
-
-example {f : ℕ → Set ℝ} (hmeas : ∀ i, MeasurableSet (f i)) (hdis : Pairwise (Disjoint on f)) :
-    volume (⋃ i, f i) = ∑' i, volume (f i) :=
-  volume.m_iUnion hmeas hdis
 
 /- ================================================================================================= -/
 

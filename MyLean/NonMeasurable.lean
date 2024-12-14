@@ -11,27 +11,27 @@ open Set Filter Real MeasureTheory BigOperators
 
 noncomputable section
 
-lemma ShiftPreservesMeasurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
+lemma shift_heasurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
   apply (MeasurableEmbedding.measurableSet_image ?_).mpr h
   exact measurableEmbedding_addRight c
 
-lemma ShiftPreservesVolume (s : Set ℝ) (c : ℝ) : volume (image (fun x ↦ x + c) s) = volume s := by
+lemma shift_volume (s : Set ℝ) (c : ℝ) : volume (image (fun x ↦ x + c) s) = volume s := by
   simp only [image_add_right, measure_preimage_add_right]
 
-lemma VolumeMono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
+lemma volume_mono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
   exact OuterMeasureClass.measure_mono volume h
 
-lemma VolumeOfCountableUnion {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
+lemma volume_biUnion {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
     (hs : s.Countable) (hd : s.PairwiseDisjoint f) (hm : ∀ i ∈ s, MeasurableSet (f i)) :
     volume (⋃ i ∈ s, f i) = ∑' (i : ↑s), volume (f ↑i) :=
   measure_biUnion hs hd hm
 
--- lemma VolumeOfCountableUnion' [Countable ι] {f : ι → Set ℝ}
+-- lemma volume_iUnion' [Countable ι] {f : ι → Set ℝ}
 --     (hdis : Pairwise (Disjoint on f)) (hmea : ∀ (i : ι), MeasurableSet (f i)) :
 --     volume (⋃ i, f i) = ∑' i, volume (f i) :=
 --   measure_iUnion hdis hmea
 
-instance vSetoid : Setoid { x : ℝ // x ∈ Icc 0 1 } where
+instance vS : Setoid { x : ℝ // x ∈ Icc 0 1 } where
   r := fun x y ↦ (↑ x : ℝ) - (↑ y) ∈ range ((↑) : ℚ → ℝ)
   iseqv := {
     refl := by
@@ -52,33 +52,37 @@ instance vSetoid : Setoid { x : ℝ // x ∈ Icc 0 1 } where
       simp [h1, h2]
   }
 
-def vT : Type := Quotient vSetoid
+def vT : Type := Quotient vS
 
-lemma vSurj : ∀ t : vT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t := by
+lemma vS_vT_surj : ∀ t : vT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t := by
   intro t
   have ⟨x, eq⟩ := Quotient.mk_surjective t
   use x, eq
 
 def vRep : vT → { x : ℝ // x ∈ Icc 0 1 } :=
-  fun t ↦ Classical.choose (vSurj t)
+  fun t ↦ Classical.choose (vS_vT_surj t)
 
-lemma vRepSpec : ∀ t : vT, ⟦vRep t⟧ = t :=
-  fun t ↦ Classical.choose_spec (vSurj t)
+lemma vRep_spec : ∀ t : vT, ⟦vRep t⟧ = t :=
+  fun t ↦ Classical.choose_spec (vS_vT_surj t)
 
-def VitaliSet : Set ℝ := { x : ℝ | ∃ t : vT, ↑(vRep t) = x }
+def vitali_set : Set ℝ := { x : ℝ | ∃ t : vT, ↑(vRep t) = x }
 
 def vI : Set ℝ := Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ)
 
 -- def vI' : Type := { i : ℝ // i ∈ Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ) }
 
-def VitaliUnion : Set ℝ := ⋃ i ∈ vI, image (fun x ↦ x + i) VitaliSet
+lemma vI_countable : vI.Countable := by
+  refine Countable.mono inter_subset_right ?_
+  apply countable_range
 
-lemma VitaliSetUpperBound : VitaliSet ⊆ Icc 0 1 := by
+def vitali_union : Set ℝ := ⋃ i ∈ vI, image (fun x ↦ x + i) vitali_set
+
+lemma vitali_set_upper_bound : vitali_set ⊆ Icc 0 1 := by
   rintro x ⟨t, ht⟩
   rw [← ht]
   exact (vRep t).property
 
-lemma VitaliUnionUpperBound : VitaliUnion ⊆ Icc (-1) 2 := by
+lemma vitali_union_upper_bound : vitali_union ⊆ Icc (-1) 2 := by
   refine iUnion₂_subset ?_
   intro i
   rw [vI, Set.mem_inter_iff]
@@ -89,19 +93,19 @@ lemma VitaliUnionUpperBound : VitaliUnion ⊆ Icc (-1) 2 := by
   have h1 : -1 - i ≤ 0 := by linarith
   have h2 : 1 ≤ 2 - i := by linarith
   have : Icc 0 1 ⊆ Icc (-1 - i) (2 - i) := Icc_subset_Icc h1 h2
-  exact subset_trans VitaliSetUpperBound this
+  exact subset_trans vitali_set_upper_bound this
 
-lemma VitaliUnionLowerBound : Icc 0 1 ⊆ VitaliUnion := by
+lemma vitali_union_lower_bound : Icc 0 1 ⊆ vitali_union := by
   intro x h_x1
   have ⟨x', h_x2⟩ : ∃ x' : { x : ℝ // x ∈ Icc 0 1 }, ↑ x' = x := CanLift.prf x h_x1
   let y : ℝ := ↑(vRep ⟦x'⟧)
   have h_y1 : y ∈ Icc 0 1 := (vRep ⟦x'⟧).property
-  have h_y2 : y ∈ VitaliSet := by simp [VitaliSet]
+  have h_y2 : y ∈ vitali_set := by simp [vitali_set]
   have h_xy1 : x - y ∈ range ((↑) : ℚ → ℝ) := by
-    have eq : vSetoid.r x' (vRep ⟦x'⟧) := by
+    have eq : vS.r x' (vRep ⟦x'⟧) := by
       refine Quotient.eq.mp ?_
       symm
-      apply vRepSpec
+      apply vRep_spec
     simp only [Setoid.r] at eq
     simpa [← h_x2]
   have h_xy2 : x - y ∈ Icc (-1) 1 := by
@@ -109,36 +113,27 @@ lemma VitaliUnionLowerBound : Icc 0 1 ⊆ VitaliUnion := by
     simp only [mem_Icc] at h_y1
     simp only [mem_Icc]
     constructor <;> linarith
-  simp only [VitaliUnion, image_add_right, mem_iUnion, mem_preimage, exists_prop]
+  simp only [vitali_union, image_add_right, mem_iUnion, mem_preimage, exists_prop]
   use (x - y)
   constructor
   . rw [vI, mem_inter_iff]
     constructor <;> assumption
   . simpa
 
-lemma VitaliUnionVolumeRange : 1 ≤ volume VitaliUnion ∧ volume VitaliUnion ≤ 3 := by
+lemma vitali_union_volume_range : 1 ≤ volume vitali_union ∧ volume vitali_union ≤ 3 := by
   have h1 : MeasureTheory.volume (Icc (0 : ℝ) 1) = 1 := by simp [volume_Icc]
   have h2 : MeasureTheory.volume (Icc (-1 : ℝ) 2) = 3 := by simp [volume_Icc] ; norm_num
   constructor
   . rw [← h1]
-    exact VolumeMono VitaliUnionLowerBound
+    exact volume_mono vitali_union_lower_bound
   . rw [← h2]
-    exact VolumeMono VitaliUnionUpperBound
+    exact volume_mono vitali_union_upper_bound
 
 end
 
 /- ================================================================================================= -/
 
 noncomputable section
-
-#check Classical.choose
-#check Classical.choose_spec
-
-example : MeasurableSpace ℝ := by infer_instance
-
-#check (volume : Measure ℝ)
-
-/- ================================================================================================= -/
 
 variable {α : Type*} [MeasurableSpace α]
 

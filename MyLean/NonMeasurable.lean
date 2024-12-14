@@ -71,11 +71,13 @@ def vI : Set ℝ := Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ)
 
 -- def vI' : Type := { i : ℝ // i ∈ Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ) }
 
+def vitali_set_shifted (i : vI) : Set ℝ := image (fun x ↦ x + i) vitali_set
+
+def vitali_union : Set ℝ := ⋃ i ∈ vI, image (fun x ↦ x + i) vitali_set
+
 lemma vI_countable : vI.Countable := by
   refine Countable.mono inter_subset_right ?_
   apply countable_range
-
-def vitali_union : Set ℝ := ⋃ i ∈ vI, image (fun x ↦ x + i) vitali_set
 
 lemma vitali_set_upper_bound : vitali_set ⊆ Icc 0 1 := by
   rintro x ⟨t, ht⟩
@@ -128,6 +130,9 @@ lemma vitali_union_volume_range : 1 ≤ volume vitali_union ∧ volume vitali_un
     exact volume_mono vitali_union_lower_bound
   . rw [← h2]
     exact volume_mono vitali_union_upper_bound
+
+-- example : vI.PairwiseDisjoint (fun i ↦ image (fun x ↦ x + i) vitali_set) := by
+--   sorry
 
 end
 

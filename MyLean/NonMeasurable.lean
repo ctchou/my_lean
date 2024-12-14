@@ -71,9 +71,9 @@ def vI : Set ℝ := Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ)
 
 -- def vI' : Type := { i : ℝ // i ∈ Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ) }
 
-def vitali_set_shifted (i : vI) : Set ℝ := image (fun x ↦ x + i) vitali_set
+def vitali_set' (i : ℝ) : Set ℝ := image (fun x ↦ x + i) vitali_set
 
-def vitali_union : Set ℝ := ⋃ i ∈ vI, image (fun x ↦ x + i) vitali_set
+def vitali_union : Set ℝ := ⋃ i ∈ vI, vitali_set' i
 
 lemma vI_countable : vI.Countable := by
   refine Countable.mono inter_subset_right ?_
@@ -120,7 +120,7 @@ lemma vitali_union_lower_bound : Icc 0 1 ⊆ vitali_union := by
   constructor
   . rw [vI, mem_inter_iff]
     constructor <;> assumption
-  . simpa
+  . simpa [vitali_set']
 
 lemma vitali_union_volume_range : 1 ≤ volume vitali_union ∧ volume vitali_union ≤ 3 := by
   have h1 : MeasureTheory.volume (Icc (0 : ℝ) 1) = 1 := by simp [volume_Icc]
@@ -131,8 +131,8 @@ lemma vitali_union_volume_range : 1 ≤ volume vitali_union ∧ volume vitali_un
   . rw [← h2]
     exact volume_mono vitali_union_upper_bound
 
--- example : vI.PairwiseDisjoint (fun i ↦ image (fun x ↦ x + i) vitali_set) := by
---   sorry
+example : vI.PairwiseDisjoint vitali_set' := by
+  sorry
 
 end
 

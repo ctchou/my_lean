@@ -7,24 +7,29 @@ import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 
 set_option warningAsError false
 
-open Set Filter Real MeasureTheory
+open Set Filter Real MeasureTheory BigOperators
 
 noncomputable section
 
-theorem ShiftPreservesMeasurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
+lemma ShiftPreservesMeasurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
   apply (MeasurableEmbedding.measurableSet_image ?_).mpr h
   exact measurableEmbedding_addRight c
 
-theorem ShiftPreservesVolume (s : Set ℝ) (c : ℝ) : volume (image (fun x ↦ x + c) s) = volume s := by
+lemma ShiftPreservesVolume (s : Set ℝ) (c : ℝ) : volume (image (fun x ↦ x + c) s) = volume s := by
   simp only [image_add_right, measure_preimage_add_right]
 
-theorem VolumeOfCountableUnion [Countable ι] {f : ι → Set ℝ}
-    (hdis : Pairwise (Disjoint on f)) (hmea : ∀ (i : ι), MeasurableSet (f i)) :
-    volume (⋃ i, f i) = ∑' i, volume (f i) :=
-  measure_iUnion hdis hmea
-
-theorem VolumeMono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
+lemma VolumeMono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
   exact OuterMeasureClass.measure_mono volume h
+
+lemma VolumeOfCountableUnion {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
+    (hs : s.Countable) (hd : s.PairwiseDisjoint f) (hm : ∀ i ∈ s, MeasurableSet (f i)) :
+    volume (⋃ i ∈ s, f i) = ∑' (i : ↑s), volume (f ↑i) :=
+  measure_biUnion hs hd hm
+
+-- lemma VolumeOfCountableUnion' [Countable ι] {f : ι → Set ℝ}
+--     (hdis : Pairwise (Disjoint on f)) (hmea : ∀ (i : ι), MeasurableSet (f i)) :
+--     volume (⋃ i, f i) = ∑' i, volume (f i) :=
+--   measure_iUnion hdis hmea
 
 instance vSetoid : Setoid { x : ℝ // x ∈ Icc 0 1 } where
   r := fun x y ↦ (↑ x : ℝ) - (↑ y) ∈ range ((↑) : ℚ → ℝ)
@@ -49,7 +54,7 @@ instance vSetoid : Setoid { x : ℝ // x ∈ Icc 0 1 } where
 
 def vT : Type := Quotient vSetoid
 
-theorem vSurj : ∀ t : vT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t := by
+lemma vSurj : ∀ t : vT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t := by
   intro t
   have ⟨x, eq⟩ := Quotient.mk_surjective t
   use x, eq
@@ -57,16 +62,68 @@ theorem vSurj : ∀ t : vT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t :=
 def vRep : vT → { x : ℝ // x ∈ Icc 0 1 } :=
   fun t ↦ Classical.choose (vSurj t)
 
-theorem vRepSpec : ∀ t : vT, ⟦vRep t⟧ = t :=
+lemma vRepSpec : ∀ t : vT, ⟦vRep t⟧ = t :=
   fun t ↦ Classical.choose_spec (vSurj t)
 
 def VitaliSet : Set ℝ := { x : ℝ | ∃ t : vT, ↑(vRep t) = x }
 
-def vVitaliSet (c : ℝ) : Set ℝ := image (fun x ↦ x + c) VitaliSet
+def vI : Set ℝ := Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ)
 
-def vI : Type := { i : ℝ // i ∈ Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ) }
+-- def vI' : Type := { i : ℝ // i ∈ Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ) }
 
+def VitaliUnion : Set ℝ := ⋃ i ∈ vI, image (fun x ↦ x + i) VitaliSet
 
+lemma VitaliSetUpperBound : VitaliSet ⊆ Icc 0 1 := by
+  rintro x ⟨t, ht⟩
+  rw [← ht]
+  exact (vRep t).property
+
+lemma VitaliUnionUpperBound : VitaliUnion ⊆ Icc (-1) 2 := by
+  refine iUnion₂_subset ?_
+  intro i
+  rw [vI, Set.mem_inter_iff]
+  rintro ⟨h0, _⟩
+  refine image_subset_iff.mpr ?_
+  simp only [preimage_add_const_Icc]
+  rw [mem_Icc] at h0
+  have h1 : -1 - i ≤ 0 := by linarith
+  have h2 : 1 ≤ 2 - i := by linarith
+  have : Icc 0 1 ⊆ Icc (-1 - i) (2 - i) := Icc_subset_Icc h1 h2
+  exact subset_trans VitaliSetUpperBound this
+
+lemma VitaliUnionLowerBound : Icc 0 1 ⊆ VitaliUnion := by
+  intro x h_x1
+  have ⟨x', h_x2⟩ : ∃ x' : { x : ℝ // x ∈ Icc 0 1 }, ↑ x' = x := CanLift.prf x h_x1
+  let y : ℝ := ↑(vRep ⟦x'⟧)
+  have h_y1 : y ∈ Icc 0 1 := (vRep ⟦x'⟧).property
+  have h_y2 : y ∈ VitaliSet := by simp [VitaliSet]
+  have h_xy1 : x - y ∈ range ((↑) : ℚ → ℝ) := by
+    have eq : vSetoid.r x' (vRep ⟦x'⟧) := by
+      refine Quotient.eq.mp ?_
+      symm
+      apply vRepSpec
+    simp only [Setoid.r] at eq
+    simpa [← h_x2]
+  have h_xy2 : x - y ∈ Icc (-1) 1 := by
+    simp only [mem_Icc] at h_x1
+    simp only [mem_Icc] at h_y1
+    simp only [mem_Icc]
+    constructor <;> linarith
+  simp only [VitaliUnion, image_add_right, mem_iUnion, mem_preimage, exists_prop]
+  use (x - y)
+  constructor
+  . rw [vI, mem_inter_iff]
+    constructor <;> assumption
+  . simpa
+
+lemma VitaliUnionVolumeRange : 1 ≤ volume VitaliUnion ∧ volume VitaliUnion ≤ 3 := by
+  have h1 : MeasureTheory.volume (Icc (0 : ℝ) 1) = 1 := by simp [volume_Icc]
+  have h2 : MeasureTheory.volume (Icc (-1 : ℝ) 2) = 3 := by simp [volume_Icc] ; norm_num
+  constructor
+  . rw [← h1]
+    exact VolumeMono VitaliUnionLowerBound
+  . rw [← h2]
+    exact VolumeMono VitaliUnionUpperBound
 
 end
 

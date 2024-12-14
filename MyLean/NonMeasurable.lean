@@ -131,7 +131,7 @@ lemma vitali_union_volume_range : 1 ≤ volume vitali_union ∧ volume vitali_un
   . rw [← h2]
     exact volume_mono vitali_union_upper_bound
 
-example : vI.PairwiseDisjoint vitali_set' := by
+lemma vitali_pairwise_disjoint : vI.PairwiseDisjoint vitali_set' := by
   intro x x_vI y y_vI x_ne_y
   refine Set.disjoint_iff.mpr ?_
   intro z

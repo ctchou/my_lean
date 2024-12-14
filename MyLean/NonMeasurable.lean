@@ -132,7 +132,30 @@ lemma vitali_union_volume_range : 1 ≤ volume vitali_union ∧ volume vitali_un
     exact volume_mono vitali_union_upper_bound
 
 example : vI.PairwiseDisjoint vitali_set' := by
-  sorry
+  intro x x_vI y y_vI x_ne_y
+  refine Set.disjoint_iff.mpr ?_
+  intro z
+  simp only [mem_inter_iff, mem_empty_iff_false, imp_false, not_and]
+  intro z_x z_y
+  simp only [vitali_set', vitali_set, image_add_right, preimage_setOf_eq, mem_setOf_eq] at z_x
+  simp only [vitali_set', vitali_set, image_add_right, preimage_setOf_eq, mem_setOf_eq] at z_y
+  have ⟨t_x, rep_x⟩ := z_x
+  have ⟨t_y, rep_y⟩ := z_y
+  have vRep_eq : vS.r (vRep t_x) (vRep t_y) := by
+    simp only [vS, mem_range]
+    simp only [rep_x, rep_y, add_sub_add_left_eq_sub, sub_neg_eq_add]
+    have : x ∈ range ((↑) : ℚ → ℝ) := by exact mem_of_mem_inter_right x_vI
+    have ⟨q_x, q_x_eq⟩ := mem_range.mp (mem_of_mem_inter_right x_vI)
+    have ⟨q_y, q_y_eq⟩ := mem_range.mp (mem_of_mem_inter_right y_vI)
+    use (-q_x + q_y)
+    simp [← q_x_eq, ← q_y_eq]
+  have vT_eq := Quotient.sound vRep_eq
+  simp only [vRep_spec] at vT_eq
+  have x_eq_y : x = y := by
+    calc x = z - ↑(vRep t_x) := by { simp [rep_x] }
+         _ = z - ↑(vRep t_y) := by { simp [vT_eq] }
+         _ = y := by { simp [rep_y] }
+  contradiction
 
 end
 

@@ -75,10 +75,6 @@ def vitali_set' (i : ℝ) : Set ℝ := image (fun x ↦ x + i) vitali_set
 
 def vitali_union : Set ℝ := ⋃ i ∈ vI, vitali_set' i
 
-lemma vI_countable : vI.Countable := by
-  refine Countable.mono inter_subset_right ?_
-  apply countable_range
-
 lemma vitali_set_upper_bound : vitali_set ⊆ Icc 0 1 := by
   rintro x ⟨t, ht⟩
   rw [← ht]
@@ -157,6 +153,10 @@ lemma vitali_pairwise_disjoint : vI.PairwiseDisjoint vitali_set' := by
          _ = y := by { simp [rep_y] }
   contradiction
 
+lemma vI_countable : vI.Countable := by
+  refine Countable.mono inter_subset_right ?_
+  apply countable_range
+
 lemma vitali_union_volume_sum (hm : MeasurableSet vitali_set) :
     volume vitali_union = ∑' (_ : ↑vI), volume vitali_set := by
   have hm' : ∀ i ∈ vI, MeasurableSet (vitali_set' i) := by
@@ -168,14 +168,31 @@ lemma vitali_union_volume_sum (hm : MeasurableSet vitali_set) :
   intro i
   rw [vitali_set', shift_volume]
 
-#check (@Elem ℝ vI)
-#check volume
+lemma vI_infinite : vI.Infinite := by
+  sorry
+
+theorem vitali_set_not_measurable : ¬ (MeasurableSet vitali_set) := by
+  intro hm
+  rcases eq_or_ne (volume vitali_set) 0 with hz | hnz
+  . have hv : volume vitali_union = 0 := by
+      rw [vitali_union_volume_sum hm, hz, tsum_zero]
+    have := vitali_union_volume_range.1
+    simp [hv] at this
+  . have hv : volume vitali_union = ⊤ := by
+      rw [vitali_union_volume_sum hm]
+      have : Infinite ↑vI := vI_infinite.to_subtype
+      exact ENNReal.tsum_const_eq_top_of_ne_zero hnz
+    have := vitali_union_volume_range.2
+    simp [hv] at this
 
 end
 
 /- ================================================================================================= -/
 
 noncomputable section
+
+#check (@Elem ℝ vI)
+#check volume
 
 variable {α : Type*} [MeasurableSpace α]
 

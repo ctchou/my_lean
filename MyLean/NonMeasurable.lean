@@ -7,7 +7,7 @@ import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 
 set_option warningAsError false
 
-open Set Filter Real MeasureTheory BigOperators
+open Set Real MeasureTheory
 
 noncomputable section
 
@@ -25,11 +25,6 @@ lemma volume_biUnion {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
     (hs : s.Countable) (hd : s.PairwiseDisjoint f) (hm : ∀ i ∈ s, MeasurableSet (f i)) :
     volume (⋃ i ∈ s, f i) = ∑' (i : ↑s), volume (f ↑i) :=
   measure_biUnion hs hd hm
-
--- lemma volume_iUnion' [Countable ι] {f : ι → Set ℝ}
---     (hdis : Pairwise (Disjoint on f)) (hmea : ∀ (i : ι), MeasurableSet (f i)) :
---     volume (⋃ i, f i) = ∑' i, volume (f i) :=
---   measure_iUnion hdis hmea
 
 instance vS : Setoid { x : ℝ // x ∈ Icc 0 1 } where
   r := fun x y ↦ (↑ x : ℝ) - (↑ y) ∈ range ((↑) : ℚ → ℝ)
@@ -68,8 +63,6 @@ lemma vRep_spec : ∀ t : vT, ⟦vRep t⟧ = t :=
 def vitali_set : Set ℝ := { x : ℝ | ∃ t : vT, ↑(vRep t) = x }
 
 def vI : Set ℝ := Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ)
-
--- def vI' : Type := { i : ℝ // i ∈ Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ) }
 
 def vitali_set' (i : ℝ) : Set ℝ := image (fun x ↦ x + i) vitali_set
 
@@ -169,7 +162,25 @@ lemma vitali_union_volume_sum (hm : MeasurableSet vitali_set) :
   rw [vitali_set', shift_volume]
 
 lemma vI_infinite : vI.Infinite := by
-  sorry
+  let f : ℕ → ℝ := fun n ↦ 1 / (n + 1)
+  have f_inj : f.Injective := by { intro m n ; simp [f] }
+  have f_rng_inf : (range f).Infinite := infinite_range_of_injective f_inj
+  refine Set.Infinite.mono ?_ f_rng_inf
+  apply range_subset_iff.mpr
+  intro n
+  simp [f, vI]
+  constructor
+  . simp only [inv_eq_one_div]
+    have h1 : (0 : ℝ) < ↑n + 1 := by
+      have : (0 : ℝ) ≤ ↑n := Nat.cast_nonneg n
+      linarith
+    constructor
+    . rw [le_div_iff₀' h1]
+      linarith
+    . rw [div_le_iff₀' h1]
+      linarith
+  . use ((↑ n + 1)⁻¹)
+    simp
 
 theorem vitali_set_not_measurable : ¬ (MeasurableSet vitali_set) := by
   intro hm
@@ -184,54 +195,5 @@ theorem vitali_set_not_measurable : ¬ (MeasurableSet vitali_set) := by
       exact ENNReal.tsum_const_eq_top_of_ne_zero hnz
     have := vitali_union_volume_range.2
     simp [hv] at this
-
-end
-
-/- ================================================================================================= -/
-
-noncomputable section
-
-#check (@Elem ℝ vI)
-#check volume
-
-variable {α : Type*} [MeasurableSpace α]
-
-example : MeasurableSet (∅ : Set α) :=
-  MeasurableSet.empty
-
-example : MeasurableSet (univ : Set α) :=
-  MeasurableSet.univ
-
-example {s : Set α} (hs : MeasurableSet s) : MeasurableSet (sᶜ) :=
-  hs.compl
-
-example : Encodable ℕ := by infer_instance
-
-example (n : ℕ) : Encodable (Fin n) := by infer_instance
-
-variable {ι : Type*} [Encodable ι]
-
-example {f : ι → Set α} (h : ∀ b, MeasurableSet (f b)) : MeasurableSet (⋃ b, f b) :=
-  MeasurableSet.iUnion h
-
-example {f : ι → Set α} (h : ∀ b, MeasurableSet (f b)) : MeasurableSet (⋂ b, f b) :=
-  MeasurableSet.iInter h
-
-variable {μ : Measure α}
-
-example (s : Set α) : μ s = ⨅ (t : Set α) (_ : s ⊆ t) (_ : MeasurableSet t), μ t :=
-  measure_eq_iInf s
-
-example (s : ι → Set α) : μ (⋃ i, s i) ≤ ∑' i, μ (s i) :=
-  measure_iUnion_le s
-
-example {f : ℕ → Set α} (hmeas : ∀ i, MeasurableSet (f i)) (hdis : Pairwise (Disjoint on f)) :
-    μ (⋃ i, f i) = ∑' i, μ (f i) :=
-  μ.m_iUnion hmeas hdis
-
-example {P : α → Prop} : (∀ᵐ x ∂μ, P x) ↔ ∀ᶠ x in ae μ, P x :=
-  Iff.rfl
-
-/- ================================================================================================= -/
 
 end

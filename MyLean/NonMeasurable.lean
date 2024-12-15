@@ -43,7 +43,7 @@ lemma volume_biUnion {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
     volume (⋃ i ∈ s, f i) = ∑' (i : ↑s), volume (f ↑i) :=
   measure_biUnion hs hd hm
 
-/-- In the setoid vS, two reals are equivalent iff their difference is rational. -/
+/-- In the setoid vS, two reals in the interval [0,1] are equivalent iff their difference is rational. -/
 
 instance vS : Setoid { x : ℝ // x ∈ Icc 0 1 } where
   r := fun x y ↦ (↑ x : ℝ) - (↑ y) ∈ range ((↑) : ℚ → ℝ)

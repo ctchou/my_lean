@@ -131,9 +131,7 @@ lemma vitali_union_lower_bound : Icc 0 1 ⊆ vitali_union := by
     simp only [Setoid.r] at eq
     simpa [← h_x2]
   have h_xy2 : x - y ∈ Icc (-1) 1 := by
-    simp only [mem_Icc] at h_x1
-    simp only [mem_Icc] at h_y1
-    simp only [mem_Icc]
+    simp only [mem_Icc] at h_x1 h_y1 ⊢
     constructor <;> linarith
   simp only [vitali_union, image_add_right, mem_iUnion, mem_preimage, exists_prop]
   use (x - y)

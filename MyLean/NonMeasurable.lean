@@ -1,15 +1,32 @@
+/-
+Copyright (c) 2024-present Ching-Tsun Chou. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Ching-Tsun Chou <chingtsun.chou@gmail.com>
+-/
 
 import Mathlib.Tactic
 import Mathlib.Util.Delaborators
 import Batteries.Tactic.Instances
-
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 
 set_option warningAsError false
 
+/-!
+# Vitali set and its non-measurability
+
+This file defines the Vitali set and proves that it is not (Lebesgue) measurable.
+The proof is essentially the one in Wikipedia:
+
+## References
+
+* <https://en.wikipedia.org/wiki/Vitali_set>
+-/
+
 open Set Real MeasureTheory
 
 noncomputable section
+
+/-- We first enumerate the measure theoretic results that we need and specialize them to the Lebesgue measure on the reals. -/
 
 lemma shift_measurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
   apply (MeasurableEmbedding.measurableSet_image ?_).mpr h
@@ -25,6 +42,8 @@ lemma volume_biUnion {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
     (hs : s.Countable) (hd : s.PairwiseDisjoint f) (hm : ∀ i ∈ s, MeasurableSet (f i)) :
     volume (⋃ i ∈ s, f i) = ∑' (i : ↑s), volume (f ↑i) :=
   measure_biUnion hs hd hm
+
+/-- In the setoid vS, two reals are equivalent iff their difference is rational. -/
 
 instance vS : Setoid { x : ℝ // x ∈ Icc 0 1 } where
   r := fun x y ↦ (↑ x : ℝ) - (↑ y) ∈ range ((↑) : ℚ → ℝ)
@@ -47,6 +66,8 @@ instance vS : Setoid { x : ℝ // x ∈ Icc 0 1 } where
       simp [h1, h2]
   }
 
+/-- Make a quotient type vT from the setoid vS. -/
+
 def vT : Type := Quotient vS
 
 lemma vS_vT_surj : ∀ t : vT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t := by
@@ -54,19 +75,29 @@ lemma vS_vT_surj : ∀ t : vT, ∃ x : { x : ℝ // x ∈ Icc 0 1 }, ⟦x⟧ = t
   have ⟨x, eq⟩ := Quotient.mk_surjective t
   use x, eq
 
+/-- Use Classical.choose to make a function vRep from vT to vS. -/
+
 def vRep : vT → { x : ℝ // x ∈ Icc 0 1 } :=
   fun t ↦ Classical.choose (vS_vT_surj t)
 
 lemma vRep_spec : ∀ t : vT, ⟦vRep t⟧ = t :=
   fun t ↦ Classical.choose_spec (vS_vT_surj t)
 
+/-- The image of vRep is the Vitali set. -/
+
 def vitali_set : Set ℝ := { x : ℝ | ∃ t : vT, ↑(vRep t) = x }
+
+/-- We now shift the Vitali set using rational numbers in the interval [-1,1]. -/
 
 def vI : Set ℝ := Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ)
 
 def vitali_set' (i : ℝ) : Set ℝ := image (fun x ↦ x + i) vitali_set
 
+/-- Take the union of all those shifts. -/
+
 def vitali_union : Set ℝ := ⋃ i ∈ vI, vitali_set' i
+
+/-- We now prove some results about the Vitali set and its shifts. -/
 
 lemma vitali_set_upper_bound : vitali_set ⊆ Icc 0 1 := by
   rintro x ⟨t, ht⟩
@@ -181,6 +212,8 @@ lemma vI_infinite : vI.Infinite := by
       linarith
   . use ((↑ n + 1)⁻¹)
     simp
+
+/-- The following is the main result. -/
 
 theorem vitali_set_not_measurable : ¬ (MeasurableSet vitali_set) := by
   intro hm

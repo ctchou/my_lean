@@ -11,7 +11,7 @@ open Set Filter Real MeasureTheory BigOperators
 
 noncomputable section
 
-lemma shift_heasurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
+lemma shift_measurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
   apply (MeasurableEmbedding.measurableSet_image ?_).mpr h
   exact measurableEmbedding_addRight c
 
@@ -156,6 +156,20 @@ lemma vitali_pairwise_disjoint : vI.PairwiseDisjoint vitali_set' := by
          _ = z - ↑(vRep t_y) := by { simp [vT_eq] }
          _ = y := by { simp [rep_y] }
   contradiction
+
+lemma vitali_union_volume_sum (hm : MeasurableSet vitali_set) :
+    volume vitali_union = ∑' (_ : ↑vI), volume vitali_set := by
+  have hm' : ∀ i ∈ vI, MeasurableSet (vitali_set' i) := by
+    intro i i_vI
+    rw [vitali_set']
+    apply shift_measurable hm
+  rw [vitali_union, volume_biUnion vI_countable vitali_pairwise_disjoint hm']
+  refine tsum_congr ?_
+  intro i
+  rw [vitali_set', shift_volume]
+
+#check (@Elem ℝ vI)
+#check volume
 
 end
 

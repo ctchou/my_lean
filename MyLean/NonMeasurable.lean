@@ -85,26 +85,26 @@ lemma vRep_spec : ∀ t : vT, ⟦vRep t⟧ = t :=
 
 /-- The image of vRep is the Vitali set. -/
 
-def vitali_set : Set ℝ := { x : ℝ | ∃ t : vT, ↑(vRep t) = x }
+def vitaliSet : Set ℝ := { x : ℝ | ∃ t : vT, ↑(vRep t) = x }
 
 /-- We now shift the Vitali set using rational numbers in the interval [-1,1]. -/
 
 def vI : Set ℝ := Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ)
 
-def vitali_set' (i : ℝ) : Set ℝ := image (fun x ↦ x + i) vitali_set
+def vitaliSet' (i : ℝ) : Set ℝ := image (fun x ↦ x + i) vitaliSet
 
 /-- Take the union of all those shifts. -/
 
-def vitali_union : Set ℝ := ⋃ i ∈ vI, vitali_set' i
+def vitaliUnion : Set ℝ := ⋃ i ∈ vI, vitaliSet' i
 
 /-- We now prove some results about the Vitali set and its shifts. -/
 
-lemma vitali_set_upper_bound : vitali_set ⊆ Icc 0 1 := by
+lemma vitaliSet_upper_bound : vitaliSet ⊆ Icc 0 1 := by
   rintro x ⟨t, ht⟩
   rw [← ht]
   exact (vRep t).property
 
-lemma vitali_union_upper_bound : vitali_union ⊆ Icc (-1) 2 := by
+lemma vitaliUnion_upper_bound : vitaliUnion ⊆ Icc (-1) 2 := by
   refine iUnion₂_subset ?_
   intro i
   rw [vI, Set.mem_inter_iff]
@@ -115,14 +115,14 @@ lemma vitali_union_upper_bound : vitali_union ⊆ Icc (-1) 2 := by
   have h1 : -1 - i ≤ 0 := by linarith
   have h2 : 1 ≤ 2 - i := by linarith
   have : Icc 0 1 ⊆ Icc (-1 - i) (2 - i) := Icc_subset_Icc h1 h2
-  exact subset_trans vitali_set_upper_bound this
+  exact subset_trans vitaliSet_upper_bound this
 
-lemma vitali_union_lower_bound : Icc 0 1 ⊆ vitali_union := by
+lemma vitaliUnion_lower_bound : Icc 0 1 ⊆ vitaliUnion := by
   intro x h_x1
   have ⟨x', h_x2⟩ : ∃ x' : { x : ℝ // x ∈ Icc 0 1 }, ↑ x' = x := CanLift.prf x h_x1
   let y : ℝ := ↑(vRep ⟦x'⟧)
   have h_y1 : y ∈ Icc 0 1 := (vRep ⟦x'⟧).property
-  have h_y2 : y ∈ vitali_set := by simp [vitali_set]
+  have h_y2 : y ∈ vitaliSet := by simp [vitaliSet]
   have h_xy1 : x - y ∈ range ((↑) : ℚ → ℝ) := by
     have eq : vS.r x' (vRep ⟦x'⟧) := by
       refine Quotient.eq.mp ?_
@@ -133,30 +133,30 @@ lemma vitali_union_lower_bound : Icc 0 1 ⊆ vitali_union := by
   have h_xy2 : x - y ∈ Icc (-1) 1 := by
     simp only [mem_Icc] at h_x1 h_y1 ⊢
     constructor <;> linarith
-  simp only [vitali_union, image_add_right, mem_iUnion, mem_preimage, exists_prop]
+  simp only [vitaliUnion, image_add_right, mem_iUnion, mem_preimage, exists_prop]
   use (x - y)
   constructor
   . rw [vI, mem_inter_iff]
     constructor <;> assumption
-  . simpa [vitali_set']
+  . simpa [vitaliSet']
 
-lemma vitali_union_volume_range : 1 ≤ volume vitali_union ∧ volume vitali_union ≤ 3 := by
+lemma vitaliUnion_volume_range : 1 ≤ volume vitaliUnion ∧ volume vitaliUnion ≤ 3 := by
   have h1 : MeasureTheory.volume (Icc (0 : ℝ) 1) = 1 := by simp [volume_Icc]
   have h2 : MeasureTheory.volume (Icc (-1 : ℝ) 2) = 3 := by simp [volume_Icc] ; norm_num
   constructor
   . rw [← h1]
-    exact volume_mono vitali_union_lower_bound
+    exact volume_mono vitaliUnion_lower_bound
   . rw [← h2]
-    exact volume_mono vitali_union_upper_bound
+    exact volume_mono vitaliUnion_upper_bound
 
-lemma vitali_pairwise_disjoint : vI.PairwiseDisjoint vitali_set' := by
+lemma vitali_pairwise_disjoint : vI.PairwiseDisjoint vitaliSet' := by
   intro x x_vI y y_vI x_ne_y
   refine Set.disjoint_iff.mpr ?_
   intro z
   simp only [mem_inter_iff, mem_empty_iff_false, imp_false, not_and]
   intro z_x z_y
-  simp only [vitali_set', vitali_set, image_add_right, preimage_setOf_eq, mem_setOf_eq] at z_x
-  simp only [vitali_set', vitali_set, image_add_right, preimage_setOf_eq, mem_setOf_eq] at z_y
+  simp only [vitaliSet', vitaliSet, image_add_right, preimage_setOf_eq, mem_setOf_eq] at z_x
+  simp only [vitaliSet', vitaliSet, image_add_right, preimage_setOf_eq, mem_setOf_eq] at z_y
   have ⟨t_x, rep_x⟩ := z_x
   have ⟨t_y, rep_y⟩ := z_y
   have vRep_eq : vS.r (vRep t_x) (vRep t_y) := by
@@ -179,16 +179,16 @@ lemma vI_countable : vI.Countable := by
   refine Countable.mono inter_subset_right ?_
   apply countable_range
 
-lemma vitali_union_volume_sum (hm : MeasurableSet vitali_set) :
-    volume vitali_union = ∑' (_ : ↑vI), volume vitali_set := by
-  have hm' : ∀ i ∈ vI, MeasurableSet (vitali_set' i) := by
+lemma vitaliUnion_volume_sum (hm : MeasurableSet vitaliSet) :
+    volume vitaliUnion = ∑' (_ : ↑vI), volume vitaliSet := by
+  have hm' : ∀ i ∈ vI, MeasurableSet (vitaliSet' i) := by
     intro i i_vI
-    rw [vitali_set']
+    rw [vitaliSet']
     apply shift_measurable hm
-  rw [vitali_union, volume_biUnion vI_countable vitali_pairwise_disjoint hm']
+  rw [vitaliUnion, volume_biUnion vI_countable vitali_pairwise_disjoint hm']
   refine tsum_congr ?_
   intro i
-  rw [vitali_set', shift_volume]
+  rw [vitaliSet', shift_volume]
 
 lemma vI_infinite : vI.Infinite := by
   let f : ℕ → ℝ := fun n ↦ 1 / (n + 1)
@@ -213,18 +213,18 @@ lemma vI_infinite : vI.Infinite := by
 
 /-- The following is the main result. -/
 
-theorem vitali_set_not_measurable : ¬ (MeasurableSet vitali_set) := by
+theorem vitaliSet_not_measurable : ¬ (MeasurableSet vitaliSet) := by
   intro hm
-  rcases eq_or_ne (volume vitali_set) 0 with hz | hnz
-  . have hv : volume vitali_union = 0 := by
-      rw [vitali_union_volume_sum hm, hz, tsum_zero]
-    have := vitali_union_volume_range.1
+  rcases eq_or_ne (volume vitaliSet) 0 with hz | hnz
+  . have hv : volume vitaliUnion = 0 := by
+      rw [vitaliUnion_volume_sum hm, hz, tsum_zero]
+    have := vitaliUnion_volume_range.1
     simp [hv] at this
-  . have hv : volume vitali_union = ⊤ := by
-      rw [vitali_union_volume_sum hm]
+  . have hv : volume vitaliUnion = ⊤ := by
+      rw [vitaliUnion_volume_sum hm]
       have : Infinite ↑vI := vI_infinite.to_subtype
       exact ENNReal.tsum_const_eq_top_of_ne_zero hnz
-    have := vitali_union_volume_range.2
+    have := vitaliUnion_volume_range.2
     simp [hv] at this
 
 end

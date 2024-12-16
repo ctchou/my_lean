@@ -14,7 +14,7 @@ set_option warningAsError false
 /-!
 # Vitali set and its non-measurability
 
-This file defines the Vitali set and proves that it is not (Lebesgue) measurable.
+This file defines the Vitali set and proves that it is not (Borel) measurable.
 The proof is essentially the one in Wikipedia:
 
 ## References
@@ -26,7 +26,7 @@ open Set Real MeasureTheory
 
 noncomputable section
 
-/-- We first enumerate the measure theoretic results that we need and specialize them to the Lebesgue measure on the reals. -/
+/-- We first list the measure theoretic results that we need and specialize them to the measure `volume` on the reals. -/
 
 lemma shift_measurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
   apply (MeasurableEmbedding.measurableSet_image ?_).mpr h

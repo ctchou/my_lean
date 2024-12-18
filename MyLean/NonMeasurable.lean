@@ -73,10 +73,10 @@ MeasureTheory.measure_biUnion_null_iff.{u_1, u_2, u_3} {α : Type u_1} {ι : Typ
 lemma volume_mono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
   exact OuterMeasureClass.measure_mono volume h
 
-lemma shift_volume (s : Set ℝ) (c : ℝ) : volume (image (fun x ↦ x + c) s) = volume s := by
+lemma shift_volume (s : Set ℝ) (c : ℝ) : volume ((fun x ↦ x + c)''s) = volume s := by
   simp only [image_add_right, measure_preimage_add_right]
 
-lemma shift_measurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
+lemma shift_measurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet ((fun x ↦ x + c)''s) := by
   apply (MeasurableEmbedding.measurableSet_image ?_).mpr h
   exact measurableEmbedding_addRight c
 
@@ -88,6 +88,10 @@ lemma biUnion_volume {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
     (hs : s.Countable) (hd : s.PairwiseDisjoint f) (hm : ∀ i ∈ s, MeasurableSet (f i)) :
     volume (⋃ i ∈ s, f i) = ∑' (i : ↑s), volume (f ↑i) :=
   measure_biUnion hs hd hm
+
+lemma biUnion_zero {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
+    (hs : s.Countable) : volume (⋃ i ∈ s, f i) = 0 ↔ ∀ i ∈ s, volume (f i) = 0 :=
+  measure_biUnion_null_iff hs
 
 lemma nullmeasurable_measurable {s : Set ℝ} (h : NullMeasurableSet s volume) :
     ∃ t ⊆ s, MeasurableSet t ∧ volume t = volume s ∧ volume (s \ t) = 0 := by
@@ -146,7 +150,7 @@ def vitaliSet : Set ℝ := { x : ℝ | ∃ t : vT, ↑(vRep t) = x }
 
 def vI : Set ℝ := Icc (-1) 1 ∩ range ((↑) : ℚ → ℝ)
 
-def vitaliSet' (i : ℝ) : Set ℝ := image (fun x ↦ x + i) vitaliSet
+def vitaliSet' (i : ℝ) : Set ℝ := (fun x ↦ x + i)''vitaliSet
 
 /-- Take the union of all those shifts. -/
 
@@ -251,6 +255,50 @@ lemma vitaliUnion_volume_sum' (hm : NullMeasurableSet vitaliSet volume) :
   have hi : ∀ i ∈ vI, vitaliSet' i = (fun x ↦ x + i)''t ∪ (fun x ↦ x + i)''(vitaliSet \ t) := by
     intro i i_vI
     rw [vitaliSet', ← image_union, union_diff_cancel t_s]
+  have hu : vitaliUnion = (⋃ i ∈ vI, (fun x ↦ x + i)''t) ∪ (⋃ i ∈ vI, (fun x ↦ x + i)''(vitaliSet \ t)) := by
+    rw [vitaliUnion]
+    apply subset_antisymm
+    . intro x
+      rw [mem_union, mem_iUnion₂]
+      rintro ⟨i, i_vI, x_vi⟩
+      rw [vitaliSet', ← union_diff_cancel t_s, image_union, mem_union] at x_vi
+      rcases x_vi with h_t | h_nt
+      . left
+        rw [mem_iUnion₂]
+        use i, i_vI
+      . right
+        rw [mem_iUnion₂]
+        use i, i_vI
+    . apply union_subset <;> apply biUnion_mono (subset_refl vI) <;> intro i _ <;> rw [vitaliSet']
+      . exact image_mono t_s
+      . refine image_mono ?_
+        exact diff_subset
+  let f : ℝ → Set ℝ := fun i ↦ (fun x ↦ x + i)''t
+  have hd : vI.PairwiseDisjoint f := by
+    refine PairwiseDisjoint.mono vitali_pairwise_disjoint ?_
+    intro i
+    unfold f vitaliSet'
+    exact image_mono t_s
+  have hm' : ∀ i ∈ vI, MeasurableSet (f i) := by
+    intro i i_vI
+    unfold f
+    apply shift_measurable t_m
+  have htv : volume (⋃ i ∈ vI, (fun x ↦ x + i)''t) = ∑' (_ : ↑vI), volume vitaliSet := by
+    rw [biUnion_volume vI_countable hd hm']
+    refine tsum_congr ?_
+    intro i
+    unfold f
+    rw [shift_volume]
+    assumption
+  have htm : MeasurableSet (⋃ i ∈ vI, (fun x ↦ x + i)''t) := by
+    exact biUnion_measurable vI_countable hm'
+  have htz : volume (⋃ i ∈ vI, (fun x ↦ x + i)''(vitaliSet \ t)) = 0 := by
+    rw [biUnion_zero vI_countable]
+    intro i _
+    rw [shift_volume]
+    assumption
+
+    sorry
 
 
   sorry

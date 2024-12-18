@@ -22,26 +22,81 @@ The proof is essentially the one in Wikipedia:
 * <https://en.wikipedia.org/wiki/Vitali_set>
 -/
 
-open Set Real MeasureTheory
+open Set Filter Real MeasureTheory
 
 noncomputable section
 
+-- import Mathlib.MeasureTheory.Measure.NullMeasurable
+/-
+Set.image_diff.{u_1, u_2} {α : Type u_1} {β : Type u_2} {f : α → β} (hf : Function.Injective f) (s t : Set α) :
+  f '' (s \ t) = f '' s \ f '' t
+-/
+#check Set.image_diff
+/-
+Real.volume_Icc {a b : ℝ} : volume (Icc a b) = ENNReal.ofReal (b - a)
+-/
+#check volume_Icc
+/-
+MeasureTheory.measure_inter_add_diff.{u_1} {α : Type u_1} {m : MeasurableSpace α} {μ : Measure α} {t : Set α}
+  (s : Set α) (ht : MeasurableSet t) : μ (s ∩ t) + μ (s \ t) = μ s
+-/
+#check MeasureTheory.measure_inter_add_diff
+/-
+MeasureTheory.measure_inter_add_diff₀.{u_2} {α : Type u_2} {m0 : MeasurableSpace α} {μ : Measure α} {t : Set α}
+  (s : Set α) (ht : NullMeasurableSet t μ) : μ (s ∩ t) + μ (s \ t) = μ s
+-/
+#check MeasureTheory.measure_inter_add_diff₀
+/-
+MeasureTheory.measure_diff.{u_1} {α : Type u_1} {m : MeasurableSpace α} {μ : Measure α} {s₁ s₂ : Set α} (h : s₂ ⊆ s₁)
+  (h₂ : NullMeasurableSet s₂ μ) (h_fin : μ s₂ ≠ ⊤) : μ (s₁ \ s₂) = μ s₁ - μ s₂
+-/
+#check MeasureTheory.measure_diff
+/-
+MeasureTheory.measure_diff'.{u_1} {α : Type u_1} {m : MeasurableSpace α} {μ : Measure α} {t : Set α} (s : Set α)
+  (hm : NullMeasurableSet t μ) (h_fin : μ t ≠ ⊤) : μ (s \ t) = μ (s ∪ t) - μ t
+-/
+#check MeasureTheory.measure_diff'
+/-
+MeasureTheory.measure_union'.{u_1} {α : Type u_1} {m : MeasurableSpace α} {μ : Measure α} {s₁ s₂ : Set α}
+  (hd : Disjoint s₁ s₂) (h : MeasurableSet s₁) : μ (s₁ ∪ s₂) = μ s₁ + μ s₂
+-/
+#check MeasureTheory.measure_union'
+/-
+MeasureTheory.measure_biUnion_null_iff.{u_1, u_2, u_3} {α : Type u_1} {ι : Type u_2} {F : Type u_3}
+  [FunLike F (Set α) ENNReal] [OuterMeasureClass F α] {μ : F} {I : Set ι} (hI : I.Countable) {s : ι → Set α} :
+  μ (⋃ i ∈ I, s i) = 0 ↔ ∀ i ∈ I, μ (s i) = 0
+-/
+#check MeasureTheory.measure_biUnion_null_iff
+
 /-- We first list the measure theoretic results that we need and specialize them to the measure `volume` on the reals. -/
+
+lemma volume_mono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
+  exact OuterMeasureClass.measure_mono volume h
+
+lemma shift_volume (s : Set ℝ) (c : ℝ) : volume (image (fun x ↦ x + c) s) = volume s := by
+  simp only [image_add_right, measure_preimage_add_right]
 
 lemma shift_measurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet (image (fun x ↦ x + c) s) := by
   apply (MeasurableEmbedding.measurableSet_image ?_).mpr h
   exact measurableEmbedding_addRight c
 
-lemma shift_volume (s : Set ℝ) (c : ℝ) : volume (image (fun x ↦ x + c) s) = volume s := by
-  simp only [image_add_right, measure_preimage_add_right]
+lemma biUnion_measurable {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
+    (hs : s.Countable) (hm : ∀ i ∈ s, MeasurableSet (f i)) : MeasurableSet (⋃ i ∈ s, f i) :=
+  MeasurableSet.biUnion hs hm
 
-lemma volume_mono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
-  exact OuterMeasureClass.measure_mono volume h
-
-lemma volume_biUnion {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
+lemma biUnion_volume {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
     (hs : s.Countable) (hd : s.PairwiseDisjoint f) (hm : ∀ i ∈ s, MeasurableSet (f i)) :
     volume (⋃ i ∈ s, f i) = ∑' (i : ↑s), volume (f ↑i) :=
   measure_biUnion hs hd hm
+
+lemma nullmeasurable_measurable {s : Set ℝ} (h : NullMeasurableSet s volume) :
+    ∃ t ⊆ s, MeasurableSet t ∧ volume t = volume s ∧ volume (s \ t) = 0 := by
+  have ⟨t, t_sub_s, t_m, t_eq_s⟩ := NullMeasurableSet.exists_measurable_subset_ae_eq h
+  use t, t_sub_s, t_m
+  constructor
+  . exact measure_congr t_eq_s
+  . refine ae_le_set.mp ?_
+    exact EventuallyEq.le (id (Filter.EventuallyEq.symm t_eq_s))
 
 /-- In the setoid vS, two reals in the interval [0,1] are equivalent iff their difference is rational. -/
 
@@ -185,10 +240,20 @@ lemma vitaliUnion_volume_sum (hm : MeasurableSet vitaliSet) :
     intro i i_vI
     rw [vitaliSet']
     apply shift_measurable hm
-  rw [vitaliUnion, volume_biUnion vI_countable vitali_pairwise_disjoint hm']
+  rw [vitaliUnion, biUnion_volume vI_countable vitali_pairwise_disjoint hm']
   refine tsum_congr ?_
   intro i
   rw [vitaliSet', shift_volume]
+
+lemma vitaliUnion_volume_sum' (hm : NullMeasurableSet vitaliSet volume) :
+    volume vitaliUnion = ∑' (_ : ↑vI), volume vitaliSet := by
+  have ⟨t, t_s, t_m, t_v, t_d⟩ := nullmeasurable_measurable hm
+  have hi : ∀ i ∈ vI, vitaliSet' i = (fun x ↦ x + i)''t ∪ (fun x ↦ x + i)''(vitaliSet \ t) := by
+    intro i i_vI
+    rw [vitaliSet', ← image_union, union_diff_cancel t_s]
+
+
+  sorry
 
 lemma vI_infinite : vI.Infinite := by
   let f : ℕ → ℝ := fun n ↦ 1 / (n + 1)

@@ -8,6 +8,7 @@ import Mathlib.Tactic
 import Mathlib.Util.Delaborators
 import Batteries.Tactic.Instances
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
+import Mathlib.MeasureTheory.Measure.NullMeasurable
 
 set_option warningAsError false
 
@@ -26,7 +27,6 @@ open Set Filter Real MeasureTheory
 
 noncomputable section
 
--- import Mathlib.MeasureTheory.Measure.NullMeasurable
 /-
 Set.image_diff.{u_1, u_2} {α : Type u_1} {β : Type u_2} {f : α → β} (hf : Function.Injective f) (s t : Set α) :
   f '' (s \ t) = f '' s \ f '' t
@@ -80,18 +80,21 @@ lemma shift_measurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : Measurabl
   apply (MeasurableEmbedding.measurableSet_image ?_).mpr h
   exact measurableEmbedding_addRight c
 
-lemma biUnion_measurable {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
-    (hs : s.Countable) (hm : ∀ i ∈ s, MeasurableSet (f i)) : MeasurableSet (⋃ i ∈ s, f i) :=
+lemma biUnion_measurable {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
+    (hs : I.Countable) (hm : ∀ i ∈ I, MeasurableSet (f i)) : MeasurableSet (⋃ i ∈ I, f i) :=
   MeasurableSet.biUnion hs hm
 
-lemma biUnion_volume {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
-    (hs : s.Countable) (hd : s.PairwiseDisjoint f) (hm : ∀ i ∈ s, MeasurableSet (f i)) :
-    volume (⋃ i ∈ s, f i) = ∑' (i : ↑s), volume (f ↑i) :=
+lemma biUnion_volume {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
+    (hs : I.Countable) (hd : I.PairwiseDisjoint f) (hm : ∀ i ∈ I, MeasurableSet (f i)) :
+    volume (⋃ i ∈ I, f i) = ∑' (i : ↑I), volume (f ↑i) :=
   measure_biUnion hs hd hm
 
-lemma biUnion_zero {ι : Type*} {s : Set ι} {f : ι → Set ℝ}
-    (hs : s.Countable) : volume (⋃ i ∈ s, f i) = 0 ↔ ∀ i ∈ s, volume (f i) = 0 :=
+lemma biUnion_zero {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
+    (hs : I.Countable) : volume (⋃ i ∈ I, f i) = 0 ↔ ∀ i ∈ I, volume (f i) = 0 :=
   measure_biUnion_null_iff hs
+
+lemma measurable_nullmeasurable {s : Set ℝ} (h : MeasurableSet s) : NullMeasurableSet s volume :=
+  MeasurableSet.nullMeasurableSet h
 
 lemma nullmeasurable_measurable {s : Set ℝ} (h : NullMeasurableSet s volume) :
     ∃ t ⊆ s, MeasurableSet t ∧ volume t = volume s ∧ volume (s \ t) = 0 := by
@@ -100,7 +103,14 @@ lemma nullmeasurable_measurable {s : Set ℝ} (h : NullMeasurableSet s volume) :
   constructor
   . exact measure_congr t_eq_s
   . refine ae_le_set.mp ?_
-    exact EventuallyEq.le (id (Filter.EventuallyEq.symm t_eq_s))
+    exact EventuallyEq.le ((Filter.EventuallyEq.symm t_eq_s))
+
+/-- We also need some results about sets and functions. -/
+
+example {ι α : Type*} {I : Set ι} {s t : Set α} {f : ι → Set α → Set α}
+    (h : t ⊆ s) : ⋃ i ∈ I, f i s = (⋃ i ∈ I, f i t) ∪ (⋃ i ∈ I, f i (s \ t)) := by
+  sorry
+
 
 /-- In the setoid vS, two reals in the interval [0,1] are equivalent iff their difference is rational. -/
 

@@ -283,38 +283,19 @@ lemma vitaliUnion_volume_sum (hm : MeasurableSet vitaliSet) :
 
 lemma vitaliUnion_volume_sum' (hm : NullMeasurableSet vitaliSet volume) :
     volume vitaliUnion = ∑' (_ : ↑vI), volume vitaliSet := by
-  have ⟨t, t_s, t_m, t_v, t_d⟩ := nullmeasurable_measurable hm
-  have hi : ∀ i ∈ vI, vitaliSet' i = (fun x ↦ x + i)''t ∪ (fun x ↦ x + i)''(vitaliSet \ t) := by
+  have ⟨t, t_s, t_m, t_v, t_c⟩ := nullmeasurable_measurable hm
+  let shift : ℝ → ℝ → ℝ := fun i ↦ fun x ↦ x + i
+  have hi : ∀ i ∈ vI, vitaliSet' i = (shift i)''t ∪ (shift i)''(vitaliSet \ t) := by
     intro i i_vI
     rw [vitaliSet', ← image_union, union_diff_cancel t_s]
-  have hu : vitaliUnion = (⋃ i ∈ vI, (fun x ↦ x + i)''t) ∪ (⋃ i ∈ vI, (fun x ↦ x + i)''(vitaliSet \ t)) := by
-    rw [vitaliUnion]
-    apply subset_antisymm
-    . intro x
-      rw [mem_union, mem_iUnion₂]
-      rintro ⟨i, i_vI, x_vi⟩
-      rw [vitaliSet', ← union_diff_cancel t_s, image_union, mem_union] at x_vi
-      rcases x_vi with h_t | h_nt
-      . left
-        rw [mem_iUnion₂]
-        use i, i_vI
-      . right
-        rw [mem_iUnion₂]
-        use i, i_vI
-    . apply union_subset <;> apply biUnion_mono (subset_refl vI) <;> intro i _ <;> rw [vitaliSet']
-      . exact image_mono t_s
-      . refine image_mono ?_
-        exact diff_subset
-  have hd : Disjoint (⋃ i ∈ vI, (fun x ↦ x + i)''t) (⋃ i ∈ vI, (fun x ↦ x + i)''(vitaliSet \ t)) := by
-    rw [Set.disjoint_left]
-    intro x
-    rw [mem_iUnion₂]
-    rintro ⟨i, i_vI, x_t⟩
-
-
-    sorry
-
-  let f : ℝ → Set ℝ := fun i ↦ (fun x ↦ x + i)''t
+  have hu : vitaliUnion = (⋃ i ∈ vI, (shift i)''t) ∪ (⋃ i ∈ vI, (shift i)''(vitaliSet \ t)) := by
+    exact biUnion_image_split t_s
+  have hd : Disjoint (⋃ i ∈ vI, (shift i)''t) (⋃ i ∈ vI, (shift i)''(vitaliSet \ t)) := by
+    have inj : ∀ i ∈ vI, (shift i).Injective := by
+      intro i _ x y
+      simp [shift]
+    exact biUnion_image_disjoint t_s inj vitali_pairwise_disjoint
+  let f : ℝ → Set ℝ := fun i ↦ (shift i)''t
   have hpd : vI.PairwiseDisjoint f := by
     refine PairwiseDisjoint.mono vitali_pairwise_disjoint ?_
     intro i
@@ -324,24 +305,21 @@ lemma vitaliUnion_volume_sum' (hm : NullMeasurableSet vitaliSet volume) :
     intro i i_vI
     unfold f
     apply shift_measurable t_m
-  have htv : volume (⋃ i ∈ vI, (fun x ↦ x + i)''t) = ∑' (_ : ↑vI), volume vitaliSet := by
+  have htv : volume (⋃ i ∈ vI, (shift i)''t) = ∑' (_ : ↑vI), volume vitaliSet := by
     rw [biUnion_volume vI_countable hpd hm']
     refine tsum_congr ?_
     intro i
     unfold f
     rw [shift_volume]
     assumption
-  have htm : MeasurableSet (⋃ i ∈ vI, (fun x ↦ x + i)''t) := by
-    exact biUnion_measurable vI_countable hm'
-  have htz : volume (⋃ i ∈ vI, (fun x ↦ x + i)''(vitaliSet \ t)) = 0 := by
+  have htz : volume (⋃ i ∈ vI, (shift i)''(vitaliSet \ t)) = 0 := by
     rw [biUnion_zero vI_countable]
     intro i _
     rw [shift_volume]
     assumption
-
-
-
-  sorry
+  have htm : MeasurableSet (⋃ i ∈ vI, (shift i)''t) := by
+    exact biUnion_measurable vI_countable hm'
+  rw [hu, union_volume hd htm, htv, htz, add_zero]
 
 lemma vI_infinite : vI.Infinite := by
   let f : ℕ → ℝ := fun n ↦ 1 / (n + 1)

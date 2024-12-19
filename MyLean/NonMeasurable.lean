@@ -15,7 +15,7 @@ set_option warningAsError false
 /-!
 # Vitali set and its non-measurability
 
-This file defines the Vitali set and proves that it is not (Borel) measurable.
+This file defines the Vitali set and proves that it is not measurable.
 The proof is essentially the one in Wikipedia:
 
 ## References
@@ -26,32 +26,6 @@ The proof is essentially the one in Wikipedia:
 open Set Filter Real MeasureTheory
 
 noncomputable section
-
-/-
-Set.image_diff.{u_1, u_2} {α : Type u_1} {β : Type u_2} {f : α → β} (hf : Function.Injective f) (s t : Set α) :
-  f '' (s \ t) = f '' s \ f '' t
--/
-#check Set.image_diff
-/-
-MeasureTheory.measure_inter_add_diff.{u_1} {α : Type u_1} {m : MeasurableSpace α} {μ : Measure α} {t : Set α}
-  (s : Set α) (ht : MeasurableSet t) : μ (s ∩ t) + μ (s \ t) = μ s
--/
-#check MeasureTheory.measure_inter_add_diff
-/-
-MeasureTheory.measure_inter_add_diff₀.{u_2} {α : Type u_2} {m0 : MeasurableSpace α} {μ : Measure α} {t : Set α}
-  (s : Set α) (ht : NullMeasurableSet t μ) : μ (s ∩ t) + μ (s \ t) = μ s
--/
-#check MeasureTheory.measure_inter_add_diff₀
-/-
-MeasureTheory.measure_diff.{u_1} {α : Type u_1} {m : MeasurableSpace α} {μ : Measure α} {s₁ s₂ : Set α} (h : s₂ ⊆ s₁)
-  (h₂ : NullMeasurableSet s₂ μ) (h_fin : μ s₂ ≠ ⊤) : μ (s₁ \ s₂) = μ s₁ - μ s₂
--/
-#check MeasureTheory.measure_diff
-/-
-MeasureTheory.measure_diff'.{u_1} {α : Type u_1} {m : MeasurableSpace α} {μ : Measure α} {t : Set α} (s : Set α)
-  (hm : NullMeasurableSet t μ) (h_fin : μ t ≠ ⊤) : μ (s \ t) = μ (s ∪ t) - μ t
--/
-#check MeasureTheory.measure_diff'
 
 /-- We first list the measure theoretic results that we need and specialize them to the measure `volume` on the reals. -/
 
@@ -270,18 +244,7 @@ lemma vI_countable : vI.Countable := by
   refine Countable.mono inter_subset_right ?_
   apply countable_range
 
-lemma vitaliUnion_volume_sum (hm : MeasurableSet vitaliSet) :
-    volume vitaliUnion = ∑' (_ : ↑vI), volume vitaliSet := by
-  have hm' : ∀ i ∈ vI, MeasurableSet (vitaliSet' i) := by
-    intro i i_vI
-    rw [vitaliSet']
-    apply shift_measurable hm
-  rw [vitaliUnion, biUnion_volume vI_countable vitali_pairwise_disjoint hm']
-  refine tsum_congr ?_
-  intro i
-  rw [vitaliSet', shift_volume]
-
-lemma vitaliUnion_volume_sum' (hm : NullMeasurableSet vitaliSet volume) :
+lemma vitaliUnion_volume_sum (hm : NullMeasurableSet vitaliSet volume) :
     volume vitaliUnion = ∑' (_ : ↑vI), volume vitaliSet := by
   have ⟨t, t_s, t_m, t_v, t_c⟩ := nullmeasurable_measurable hm
   let shift : ℝ → ℝ → ℝ := fun i ↦ fun x ↦ x + i
@@ -342,9 +305,9 @@ lemma vI_infinite : vI.Infinite := by
   . use ((↑ n + 1)⁻¹)
     simp
 
-/-- The following is the main result. -/
+/-- The following theorems are the main results. -/
 
-theorem vitaliSet_not_measurable : ¬ (MeasurableSet vitaliSet) := by
+theorem vitaliSet_not_nullmeasurable : ¬ (NullMeasurableSet vitaliSet volume) := by
   intro hm
   rcases eq_or_ne (volume vitaliSet) 0 with hz | hnz
   . have hv : volume vitaliUnion = 0 := by
@@ -353,6 +316,39 @@ theorem vitaliSet_not_measurable : ¬ (MeasurableSet vitaliSet) := by
     simp [hv] at this
   . have hv : volume vitaliUnion = ⊤ := by
       rw [vitaliUnion_volume_sum hm]
+      have : Infinite ↑vI := vI_infinite.to_subtype
+      exact ENNReal.tsum_const_eq_top_of_ne_zero hnz
+    have := vitaliUnion_volume_range.2
+    simp [hv] at this
+
+theorem vitaliSet_not_measurable : ¬ (MeasurableSet vitaliSet) := by
+  intro hm
+  exact vitaliSet_not_nullmeasurable (measurable_nullmeasurable hm)
+
+/-- The following two results show that `vitaliSet_not_measurable` cam be proved more directly
+    than via `vitaliSet_not_nullmeasurable`.  The difference is the stronger assumption
+    `MeasurableSet vitaliSet` in `vitaliUnion_volume_sum'`. -/
+
+lemma vitaliUnion_volume_sum' (hm : MeasurableSet vitaliSet) :
+    volume vitaliUnion = ∑' (_ : ↑vI), volume vitaliSet := by
+  have hm' : ∀ i ∈ vI, MeasurableSet (vitaliSet' i) := by
+    intro i i_vI
+    rw [vitaliSet']
+    apply shift_measurable hm
+  rw [vitaliUnion, biUnion_volume vI_countable vitali_pairwise_disjoint hm']
+  refine tsum_congr ?_
+  intro i
+  rw [vitaliSet', shift_volume]
+
+theorem vitaliSet_not_measurable' : ¬ (MeasurableSet vitaliSet) := by
+  intro hm
+  rcases eq_or_ne (volume vitaliSet) 0 with hz | hnz
+  . have hv : volume vitaliUnion = 0 := by
+      rw [vitaliUnion_volume_sum' hm, hz, tsum_zero]
+    have := vitaliUnion_volume_range.1
+    simp [hv] at this
+  . have hv : volume vitaliUnion = ⊤ := by
+      rw [vitaliUnion_volume_sum' hm]
       have : Infinite ↑vI := vI_infinite.to_subtype
       exact ENNReal.tsum_const_eq_top_of_ne_zero hnz
     have := vitaliUnion_volume_range.2

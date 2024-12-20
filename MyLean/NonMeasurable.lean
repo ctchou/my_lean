@@ -32,6 +32,22 @@ noncomputable section
 example {a b : ℝ} : volume (Icc a b) = ENNReal.ofReal (b - a) :=
   volume_Icc
 
+lemma measurable_nullmeasurable {s : Set ℝ} (h : MeasurableSet s) : NullMeasurableSet s volume :=
+  MeasurableSet.nullMeasurableSet h
+
+lemma measurable_null_nullmeasurable {s t : Set ℝ}
+    (hm : NullMeasurableSet s) (hn : volume t = 0) : NullMeasurableSet (s ∪ t) :=
+  NullMeasurableSet.union_null hm hn
+
+lemma nullmeasurable_measurable_null {s : Set ℝ} (h : NullMeasurableSet s volume) :
+    ∃ t ⊆ s, MeasurableSet t ∧ volume t = volume s ∧ volume (s \ t) = 0 := by
+  have ⟨t, t_sub_s, t_m, t_eq_s⟩ := NullMeasurableSet.exists_measurable_subset_ae_eq h
+  use t, t_sub_s, t_m
+  constructor
+  . exact measure_congr t_eq_s
+  . refine ae_le_set.mp ?_
+    exact t_eq_s.symm.le
+
 lemma volume_mono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
   exact OuterMeasureClass.measure_mono volume h
 
@@ -41,6 +57,14 @@ lemma shift_volume (s : Set ℝ) (c : ℝ) : volume ((fun x ↦ x + c)''s) = vol
 lemma shift_measurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet ((fun x ↦ x + c)''s) := by
   apply (MeasurableEmbedding.measurableSet_image ?_).mpr h
   exact measurableEmbedding_addRight c
+
+lemma shift_nullmeasurable {s : Set ℝ} (h : NullMeasurableSet s volume) (c : ℝ) :
+    NullMeasurableSet ((fun x ↦ x + c)''s) volume := by
+  rcases nullmeasurable_measurable_null h with ⟨t, ts, tm, vs, vt⟩
+  rw [← union_diff_cancel ts, image_union]
+  refine measurable_null_nullmeasurable ?_ ?_
+  . refine measurable_nullmeasurable (shift_measurable tm c)
+  . rw [shift_volume (s \ t), vt]
 
 lemma union_volume {s t : Set ℝ} (hd : Disjoint s t) (h : MeasurableSet s) : volume (s ∪ t) = volume s + volume t :=
     measure_union' hd h
@@ -57,18 +81,6 @@ lemma biUnion_volume {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
 lemma biUnion_zero {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
     (hs : I.Countable) : volume (⋃ i ∈ I, f i) = 0 ↔ ∀ i ∈ I, volume (f i) = 0 :=
   measure_biUnion_null_iff hs
-
-lemma measurable_nullmeasurable {s : Set ℝ} (h : MeasurableSet s) : NullMeasurableSet s volume :=
-  MeasurableSet.nullMeasurableSet h
-
-lemma nullmeasurable_measurable {s : Set ℝ} (h : NullMeasurableSet s volume) :
-    ∃ t ⊆ s, MeasurableSet t ∧ volume t = volume s ∧ volume (s \ t) = 0 := by
-  have ⟨t, t_sub_s, t_m, t_eq_s⟩ := NullMeasurableSet.exists_measurable_subset_ae_eq h
-  use t, t_sub_s, t_m
-  constructor
-  . exact measure_congr t_eq_s
-  . refine ae_le_set.mp ?_
-    exact t_eq_s.symm.le
 
 /-- We also need some results about sets and functions. -/
 
@@ -246,7 +258,7 @@ lemma vI_countable : vI.Countable := by
 
 lemma vitaliUnion_volume_sum (hm : NullMeasurableSet vitaliSet volume) :
     volume vitaliUnion = ∑' (_ : ↑vI), volume vitaliSet := by
-  have ⟨t, t_s, t_m, t_v, t_c⟩ := nullmeasurable_measurable hm
+  have ⟨t, t_s, t_m, t_v, t_c⟩ := nullmeasurable_measurable_null hm
   let shift : ℝ → ℝ → ℝ := fun i ↦ fun x ↦ x + i
   have hi : ∀ i ∈ vI, vitaliSet' i = (shift i)''t ∪ (shift i)''(vitaliSet \ t) := by
     intro i i_vI

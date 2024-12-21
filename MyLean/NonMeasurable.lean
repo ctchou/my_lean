@@ -73,14 +73,58 @@ lemma biUnion_measurable {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
     (hs : I.Countable) (hm : ∀ i ∈ I, MeasurableSet (f i)) : MeasurableSet (⋃ i ∈ I, f i) :=
   MeasurableSet.biUnion hs hm
 
-lemma biUnion_volume {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
-    (hs : I.Countable) (hd : I.PairwiseDisjoint f) (hm : ∀ i ∈ I, MeasurableSet (f i)) :
-    volume (⋃ i ∈ I, f i) = ∑' (i : ↑I), volume (f ↑i) :=
-  measure_biUnion hs hd hm
-
 lemma biUnion_zero {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
     (hs : I.Countable) : volume (⋃ i ∈ I, f i) = 0 ↔ ∀ i ∈ I, volume (f i) = 0 :=
   measure_biUnion_null_iff hs
+
+lemma biUnion_volume {ι : Type*} {I : Set ι} {s : ι → Set ℝ}
+    (hs : I.Countable) (hd : I.PairwiseDisjoint s) (hm : ∀ i ∈ I, MeasurableSet (s i)) :
+    volume (⋃ i ∈ I, s i) = ∑' (i : ↑I), volume (s ↑i) :=
+  measure_biUnion hs hd hm
+
+lemma biUnion_volume' {ι : Type*} {I : Set ι} {s : ι → Set ℝ}
+    (hc : I.Countable) (hd : I.PairwiseDisjoint s) (hm : ∀ i ∈ I, NullMeasurableSet (s i) volume) :
+    volume (⋃ i ∈ I, s i) = ∑' (i : ↑I), volume (s ↑i) := by
+  have : ∀ i ∈ I, ∃ t ⊆ s i, MeasurableSet t ∧ volume t = volume (s i) ∧ volume ((s i) \ t) = 0 := by
+    intro i i_I
+    exact nullmeasurable_measurable_null (hm i i_I)
+  choose! t t_s t_m t_v t_z using this
+  have hp : ⋃ i ∈ I, s i = (⋃ i ∈ I, t i) ∪ (⋃ i ∈ I, (s i \ t i)) := by
+    refine le_antisymm ?_ ?_
+    . intro x
+      simp only [mem_union, mem_iUnion₂]
+      rintro ⟨i, i_I, x_s⟩
+      rcases em (x ∈ t i) with x_t | x_nt
+      . left ; use i, i_I
+      . right ; use i, i_I
+        rw [mem_diff]
+        constructor <;> assumption
+    . refine union_subset ?_ ?_
+      . exact biUnion_mono (subset_refl I) t_s
+      . refine biUnion_mono (subset_refl I) ?_
+        intro i ?_
+        exact diff_subset
+  have hm_t : ∀ i ∈ I, MeasurableSet (t i) := by
+    intro i i_I
+    exact t_m i i_I
+
+
+  have hz : volume (⋃ i ∈ I, (s i \ t i)) = 0 := by
+    exact (biUnion_zero hc).mpr t_z
+
+
+
+
+
+  have hd' : I.PairwiseDisjoint t := by
+    refine PairwiseDisjoint.mono_on hd ?_
+    exact t_s
+  have := measure_biUnion (μ := volume) hc hd' hm_t
+
+
+
+
+  sorry
 
 /-- We also need some results about sets and functions. -/
 

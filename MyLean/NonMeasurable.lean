@@ -89,6 +89,7 @@ lemma biUnion_volume {ι : Type*} {I : Set ι} {s : ι → Set ℝ}
     exact nullmeasurable_measurable_null (hm i i_I)
   choose! t t_s t_m t_v t_z using this
   have h_st : ⋃ i ∈ I, s i = (⋃ i ∈ I, t i) ∪ (⋃ i ∈ I, (s i \ t i)) := by
+    -- This is probably not the most elegant proof of this rather trivial fact.
     refine le_antisymm ?_ ?_
     . intro x
       simp only [mem_union, mem_iUnion₂]

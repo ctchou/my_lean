@@ -67,13 +67,24 @@ lemma shift_nullmeasurable {s : Set ℝ} (h : NullMeasurableSet s volume) (c : �
   . rw [shift_volume (s \ t), vt]
 
 lemma union_volume {s t : Set ℝ} (hd : Disjoint s t) (h : MeasurableSet s) : volume (s ∪ t) = volume s + volume t :=
-    measure_union' hd h
+  measure_union' hd h
+
+lemma union_volume_null {s t : Set ℝ} (hs : MeasurableSet s) (ht : volume t = 0) : volume (s ∪ t) = volume s := by
+  have hu : s ∪ t = s ∪ (t \ s) := union_diff_self.symm
+  have hd : Disjoint s (t \ s) := disjoint_sdiff_right
+  have hz : volume (t \ s) = 0 := by
+    apply le_antisymm
+    . rw [← ht]
+      exact volume_mono diff_subset
+    . exact zero_le (volume (t \ s))
+  rw [hu, measure_union' hd hs, hz]
+  abel
 
 lemma biUnion_measurable {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
     (hs : I.Countable) (hm : ∀ i ∈ I, MeasurableSet (f i)) : MeasurableSet (⋃ i ∈ I, f i) :=
   MeasurableSet.biUnion hs hm
 
-lemma biUnion_zero {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
+lemma biUnion_null {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
     (hs : I.Countable) : volume (⋃ i ∈ I, f i) = 0 ↔ ∀ i ∈ I, volume (f i) = 0 :=
   measure_biUnion_null_iff hs
 
@@ -89,7 +100,7 @@ lemma biUnion_volume' {ι : Type*} {I : Set ι} {s : ι → Set ℝ}
     intro i i_I
     exact nullmeasurable_measurable_null (hm i i_I)
   choose! t t_s t_m t_v t_z using this
-  have hp : ⋃ i ∈ I, s i = (⋃ i ∈ I, t i) ∪ (⋃ i ∈ I, (s i \ t i)) := by
+  have h_st : ⋃ i ∈ I, s i = (⋃ i ∈ I, t i) ∪ (⋃ i ∈ I, (s i \ t i)) := by
     refine le_antisymm ?_ ?_
     . intro x
       simp only [mem_union, mem_iUnion₂]
@@ -104,27 +115,24 @@ lemma biUnion_volume' {ι : Type*} {I : Set ι} {s : ι → Set ℝ}
       . refine biUnion_mono (subset_refl I) ?_
         intro i ?_
         exact diff_subset
-  have hm_t : ∀ i ∈ I, MeasurableSet (t i) := by
+  have hm_ti : ∀ i ∈ I, MeasurableSet (t i) := by
     intro i i_I
     exact t_m i i_I
-
-
-  have hz : volume (⋃ i ∈ I, (s i \ t i)) = 0 := by
-    exact (biUnion_zero hc).mpr t_z
-
-
-
-
-
-  have hd' : I.PairwiseDisjoint t := by
+  have hm_tu : MeasurableSet (⋃ i ∈ I, t i) := by
+    exact MeasurableSet.biUnion hc hm_ti
+  have h_null : volume (⋃ i ∈ I, (s i \ t i)) = 0 := by
+    exact (biUnion_null hc).mpr t_z
+  have hv_s : volume (⋃ i ∈ I, s i) = volume (⋃ i ∈ I, t i) := by
+    rw [h_st, union_volume_null hm_tu h_null]
+  have hd_t : I.PairwiseDisjoint t := by
     refine PairwiseDisjoint.mono_on hd ?_
     exact t_s
-  have := measure_biUnion (μ := volume) hc hd' hm_t
-
-
-
-
-  sorry
+  have hv_t : volume (⋃ i ∈ I, t i) = ∑' (i : ↑I), volume (t ↑i) := by
+    exact measure_biUnion (μ := volume) hc hd_t hm_ti
+  rw [hv_s, hv_t]
+  refine tsum_congr ?_
+  rintro ⟨i, i_I⟩
+  rw [t_v i i_I]
 
 /-- We also need some results about sets and functions. -/
 
@@ -332,7 +340,7 @@ lemma vitaliUnion_volume_sum (hm : NullMeasurableSet vitaliSet volume) :
     rw [shift_volume]
     assumption
   have htz : volume (⋃ i ∈ vI, (shift i)''(vitaliSet \ t)) = 0 := by
-    rw [biUnion_zero vI_countable]
+    rw [biUnion_null vI_countable]
     intro i _
     rw [shift_volume]
     assumption

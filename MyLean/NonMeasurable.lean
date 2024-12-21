@@ -27,10 +27,14 @@ open Set Filter Real MeasureTheory
 
 noncomputable section
 
-/-- We first list the measure theoretic results that we need and specialize them to the measure `volume` on the reals. -/
+/-- We first derive the measure theoretic results that we need.
+    They only need to hold for the measure `volume` on the reals. -/
 
 example {a b : ℝ} : volume (Icc a b) = ENNReal.ofReal (b - a) :=
   volume_Icc
+
+lemma volume_mono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
+  exact OuterMeasureClass.measure_mono volume h
 
 lemma measurable_nullmeasurable {s : Set ℝ} (h : MeasurableSet s) : NullMeasurableSet s volume :=
   MeasurableSet.nullMeasurableSet h
@@ -48,26 +52,19 @@ lemma nullmeasurable_measurable_null {s : Set ℝ} (h : NullMeasurableSet s volu
   . refine ae_le_set.mp ?_
     exact t_eq_s.symm.le
 
-lemma volume_mono {s t : Set ℝ} (h : s ⊆ t) : volume s ≤ volume t := by
-  exact OuterMeasureClass.measure_mono volume h
-
 lemma shift_volume (s : Set ℝ) (c : ℝ) : volume ((fun x ↦ x + c)''s) = volume s := by
   simp only [image_add_right, measure_preimage_add_right]
-
-lemma shift_measurable {s : Set ℝ} (h : MeasurableSet s) (c : ℝ) : MeasurableSet ((fun x ↦ x + c)''s) := by
-  apply (MeasurableEmbedding.measurableSet_image ?_).mpr h
-  exact measurableEmbedding_addRight c
 
 lemma shift_nullmeasurable {s : Set ℝ} (h : NullMeasurableSet s volume) (c : ℝ) :
     NullMeasurableSet ((fun x ↦ x + c)''s) volume := by
   rcases nullmeasurable_measurable_null h with ⟨t, ts, tm, vs, vt⟩
   rw [← union_diff_cancel ts, image_union]
   refine measurable_null_nullmeasurable ?_ ?_
-  . refine measurable_nullmeasurable (shift_measurable tm c)
+  . have : MeasurableSet ((fun x ↦ x + c)''t) := by
+      apply (MeasurableEmbedding.measurableSet_image ?_).mpr tm
+      exact measurableEmbedding_addRight c
+    exact measurable_nullmeasurable this
   . rw [shift_volume (s \ t), vt]
-
-lemma union_volume {s t : Set ℝ} (hd : Disjoint s t) (h : MeasurableSet s) : volume (s ∪ t) = volume s + volume t :=
-  measure_union' hd h
 
 lemma union_volume_null {s t : Set ℝ} (hs : MeasurableSet s) (ht : volume t = 0) : volume (s ∪ t) = volume s := by
   have hu : s ∪ t = s ∪ (t \ s) := union_diff_self.symm
@@ -80,20 +77,11 @@ lemma union_volume_null {s t : Set ℝ} (hs : MeasurableSet s) (ht : volume t = 
   rw [hu, measure_union' hd hs, hz]
   abel
 
-lemma biUnion_measurable {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
-    (hs : I.Countable) (hm : ∀ i ∈ I, MeasurableSet (f i)) : MeasurableSet (⋃ i ∈ I, f i) :=
-  MeasurableSet.biUnion hs hm
-
 lemma biUnion_null {ι : Type*} {I : Set ι} {f : ι → Set ℝ}
     (hs : I.Countable) : volume (⋃ i ∈ I, f i) = 0 ↔ ∀ i ∈ I, volume (f i) = 0 :=
   measure_biUnion_null_iff hs
 
 lemma biUnion_volume {ι : Type*} {I : Set ι} {s : ι → Set ℝ}
-    (hs : I.Countable) (hd : I.PairwiseDisjoint s) (hm : ∀ i ∈ I, MeasurableSet (s i)) :
-    volume (⋃ i ∈ I, s i) = ∑' (i : ↑I), volume (s ↑i) :=
-  measure_biUnion hs hd hm
-
-lemma biUnion_volume' {ι : Type*} {I : Set ι} {s : ι → Set ℝ}
     (hc : I.Countable) (hd : I.PairwiseDisjoint s) (hm : ∀ i ∈ I, NullMeasurableSet (s i) volume) :
     volume (⋃ i ∈ I, s i) = ∑' (i : ↑I), volume (s ↑i) := by
   have : ∀ i ∈ I, ∃ t ⊆ s i, MeasurableSet t ∧ volume t = volume (s i) ∧ volume ((s i) \ t) = 0 := by
@@ -133,44 +121,6 @@ lemma biUnion_volume' {ι : Type*} {I : Set ι} {s : ι → Set ℝ}
   refine tsum_congr ?_
   rintro ⟨i, i_I⟩
   rw [t_v i i_I]
-
-/-- We also need some results about sets and functions. -/
-
-lemma biUnion_image_split {ι α : Type*} {I : Set ι} {s t : Set α} {f : ι → α → α}
-    (h : t ⊆ s) : ⋃ i ∈ I, (f i)''s = (⋃ i ∈ I, (f i)''t) ∪ (⋃ i ∈ I, (f i)''(s \ t)) := by
-  apply subset_antisymm
-  . intro a
-    rw [mem_union, mem_iUnion₂]
-    rintro ⟨i, i_I, a_fi⟩
-    rw [← union_diff_cancel h, image_union, mem_union] at a_fi
-    rcases a_fi with h_t | h_nt
-    . left ; rw [mem_iUnion₂] ; use i, i_I
-    . right ; rw [mem_iUnion₂] ; use i, i_I
-  . apply union_subset <;> apply biUnion_mono (subset_refl I) <;> intro i _
-    . exact image_mono h
-    . refine image_mono ?_
-      exact diff_subset
-
-lemma biUnion_image_disjoint {ι α : Type*} {I : Set ι} {s t : Set α} {f : ι → α → α}
-    (h : t ⊆ s) (hi : ∀ i ∈ I, (f i).Injective) (hd : I.PairwiseDisjoint (fun i ↦ (f i)''s)) :
-    Disjoint (⋃ i ∈ I, (f i)''t) (⋃ i ∈ I, (f i)''(s \ t)) := by
-  rw [Set.disjoint_left]
-  intro a
-  rw [mem_iUnion₂] ; rintro ⟨i, i_I, a_fi⟩
-  rw [mem_iUnion₂] ; rintro ⟨j, j_I, a_fj⟩
-  rcases eq_or_ne i j with h_eq | h_ne
-  . rw [mem_image] at a_fi a_fj
-    rcases a_fi with ⟨x, x_t, x_a⟩
-    rcases a_fj with ⟨y, y_nt, y_a⟩
-    have h_ij : f i x = f j y := by rw [x_a, y_a]
-    rw [← h_eq] at h_ij
-    have h_xy := hi i i_I h_ij
-    rw [← h_xy, mem_diff] at y_nt
-    tauto
-  . have a_fi_s : a ∈ (f i)''s := image_mono h a_fi
-    have a_fj_s : a ∈ (f j)''s := image_mono diff_subset a_fj
-    have := Set.disjoint_iff.mp (hd i_I j_I h_ne) (mem_inter a_fi_s a_fj_s)
-    exact not_mem_empty a this
 
 /-- In the setoid vS, two reals in the interval [0,1] are equivalent iff their difference is rational. -/
 
@@ -310,43 +260,14 @@ lemma vI_countable : vI.Countable := by
 
 lemma vitaliUnion_volume_sum (hm : NullMeasurableSet vitaliSet volume) :
     volume vitaliUnion = ∑' (_ : ↑vI), volume vitaliSet := by
-  have ⟨t, t_s, t_m, t_v, t_c⟩ := nullmeasurable_measurable_null hm
-  let shift : ℝ → ℝ → ℝ := fun i ↦ fun x ↦ x + i
-  have hi : ∀ i ∈ vI, vitaliSet' i = (shift i)''t ∪ (shift i)''(vitaliSet \ t) := by
+  have hm' : ∀ i ∈ vI, NullMeasurableSet (vitaliSet' i) volume := by
     intro i i_vI
-    rw [vitaliSet', ← image_union, union_diff_cancel t_s]
-  have hu : vitaliUnion = (⋃ i ∈ vI, (shift i)''t) ∪ (⋃ i ∈ vI, (shift i)''(vitaliSet \ t)) := by
-    exact biUnion_image_split t_s
-  have hd : Disjoint (⋃ i ∈ vI, (shift i)''t) (⋃ i ∈ vI, (shift i)''(vitaliSet \ t)) := by
-    have inj : ∀ i ∈ vI, (shift i).Injective := by
-      intro i _ x y
-      simp [shift]
-    exact biUnion_image_disjoint t_s inj vitali_pairwise_disjoint
-  let f : ℝ → Set ℝ := fun i ↦ (shift i)''t
-  have hpd : vI.PairwiseDisjoint f := by
-    refine PairwiseDisjoint.mono vitali_pairwise_disjoint ?_
-    intro i
-    unfold f vitaliSet'
-    exact image_mono t_s
-  have hm' : ∀ i ∈ vI, MeasurableSet (f i) := by
-    intro i i_vI
-    unfold f
-    apply shift_measurable t_m
-  have htv : volume (⋃ i ∈ vI, (shift i)''t) = ∑' (_ : ↑vI), volume vitaliSet := by
-    rw [biUnion_volume vI_countable hpd hm']
-    refine tsum_congr ?_
-    intro i
-    unfold f
-    rw [shift_volume]
-    assumption
-  have htz : volume (⋃ i ∈ vI, (shift i)''(vitaliSet \ t)) = 0 := by
-    rw [biUnion_null vI_countable]
-    intro i _
-    rw [shift_volume]
-    assumption
-  have htm : MeasurableSet (⋃ i ∈ vI, (shift i)''t) := by
-    exact biUnion_measurable vI_countable hm'
-  rw [hu, union_volume hd htm, htv, htz, add_zero]
+    rw [vitaliSet']
+    apply shift_nullmeasurable hm
+  rw [vitaliUnion, biUnion_volume vI_countable vitali_pairwise_disjoint hm']
+  refine tsum_congr ?_
+  intro i
+  rw [vitaliSet', shift_volume]
 
 lemma vI_infinite : vI.Infinite := by
   let f : ℕ → ℝ := fun n ↦ 1 / (n + 1)
@@ -388,34 +309,5 @@ theorem vitaliSet_not_nullmeasurable : ¬ (NullMeasurableSet vitaliSet volume) :
 theorem vitaliSet_not_measurable : ¬ (MeasurableSet vitaliSet) := by
   intro hm
   exact vitaliSet_not_nullmeasurable (measurable_nullmeasurable hm)
-
-/-- The following two results show that `vitaliSet_not_measurable` cam be proved more directly
-    than via `vitaliSet_not_nullmeasurable`.  The difference is the stronger assumption
-    `MeasurableSet vitaliSet` in `vitaliUnion_volume_sum'`. -/
-
-lemma vitaliUnion_volume_sum' (hm : MeasurableSet vitaliSet) :
-    volume vitaliUnion = ∑' (_ : ↑vI), volume vitaliSet := by
-  have hm' : ∀ i ∈ vI, MeasurableSet (vitaliSet' i) := by
-    intro i i_vI
-    rw [vitaliSet']
-    apply shift_measurable hm
-  rw [vitaliUnion, biUnion_volume vI_countable vitali_pairwise_disjoint hm']
-  refine tsum_congr ?_
-  intro i
-  rw [vitaliSet', shift_volume]
-
-theorem vitaliSet_not_measurable' : ¬ (MeasurableSet vitaliSet) := by
-  intro hm
-  rcases eq_or_ne (volume vitaliSet) 0 with hz | hnz
-  . have hv : volume vitaliUnion = 0 := by
-      rw [vitaliUnion_volume_sum' hm, hz, tsum_zero]
-    have := vitaliUnion_volume_range.1
-    simp [hv] at this
-  . have hv : volume vitaliUnion = ⊤ := by
-      rw [vitaliUnion_volume_sum' hm]
-      have : Infinite ↑vI := vI_infinite.to_subtype
-      exact ENNReal.tsum_const_eq_top_of_ne_zero hnz
-    have := vitaliUnion_volume_range.2
-    simp [hv] at this
 
 end

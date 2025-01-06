@@ -62,13 +62,26 @@ subtraction truncates to zero for example. If you find that lemma `lemma_name` u
 an equation does not apply to `ENNReal`, try to find a lemma named something like
 `ENNReal.lemma_name_of_something` and use that instead. -/
 
+/-
+⊢ ∀ {α : Type u_1} {m0 : MeasurableSpace α} (μ : Measure α) [inst : IsFiniteMeasure μ] (s : Set α), μ s ≠ ⊤
+-/
+#check measure_ne_top
+/-
+⊢ ∀ {α : Type u_1} {m0 : MeasurableSpace α} (μ : Measure α) [inst : IsFiniteMeasure μ] (s : Set α), μ s < ⊤
+-/
+#check measure_lt_top
+
 /-- Two sets `A, B` are independent for the ambient probability measure `ℙ` if
 `ℙ (A ∩ B) = ℙ A * ℙ B`. -/
 def IndepSet (A B : Set Ω) : Prop := ℙ (A ∩ B) = ℙ A * ℙ B
 
 /-- If `A` is independent of `B`, then `B` is independent of `A`. -/
 lemma IndepSet.symm : IndepSet A B → IndepSet B A := by {
-  sorry
+--  sorry
+  unfold IndepSet
+  intro h
+  rw [inter_comm, mul_comm]
+  assumption
 }
 
 /- Many lemmas in measure theory require sets to be measurable (`MeasurableSet A`).

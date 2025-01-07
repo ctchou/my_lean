@@ -89,20 +89,61 @@ If you are presented with a goal like `⊢ MeasurableSet (A ∩ B)`, try the `me
 That tactic produces measurability proofs. -/
 
 -- Hints: `compl_eq_univ_diff`, `measure_diff`, `inter_univ`, `measure_compl`, `ENNReal.mul_sub`
+
+/-
+MeasureTheory.measure_compl.{u_1} {α : Type u_1} {m : MeasurableSpace α} {μ : Measure α} {s : Set α}
+  (h₁ : MeasurableSet s) (h_fin : μ s ≠ ⊤) : μ sᶜ = μ univ - μ s
+-/
+#check measure_compl
+/-
+⊢ ∀ {α : Type u_1} {m : MeasurableSpace α} {μ : Measure α} {s₁ s₂ : Set α},
+  s₂ ⊆ s₁ → NullMeasurableSet s₂ μ → μ s₂ ≠ ⊤ → μ (s₁ \ s₂) = μ s₁ - μ s₂
+-/
+#check measure_diff
+
 lemma IndepSet.compl_right (hA : MeasurableSet A) (hB : MeasurableSet B) :
     IndepSet A B → IndepSet A Bᶜ := by {
-  sorry
+--  sorry
+  unfold IndepSet
+  intro h0
+  have h1 : A ∩ Bᶜ = A \ (A ∩ B) := by ext x ; simp
+  have h2 : ℙ (A \ (A ∩ B)) = ℙ A - ℙ (A ∩ B) := by
+    refine measure_diff inter_subset_left ?_ (measure_ne_top ℙ (A ∩ B))
+    apply MeasurableSet.nullMeasurableSet
+    exact MeasurableSet.inter hA hB
+  have h3 : ℙ Bᶜ = 1 - ℙ B := by
+    exact prob_compl_eq_one_sub hB
+  have h4 : ℙ A * (1 - ℙ B) = ℙ A * 1 - ℙ A * ℙ B := by
+    apply ENNReal.mul_sub
+    intro ; intro
+    exact measure_ne_top ℙ A
+  rw [h1, h2, h3, h0, h4, mul_one]
 }
 
 -- Use what you have proved so far
 lemma IndepSet.compl_left (hA : MeasurableSet A) (hB : MeasurableSet B) (h : IndepSet A B) :
-    IndepSet Aᶜ B := by{
-  sorry
+    IndepSet Aᶜ B := by {
+--  sorry
+  apply IndepSet.symm
+  apply IndepSet.compl_right hB hA
+  exact IndepSet.symm h
 }
 
 -- Hint: `ENNReal.mul_self_eq_self_iff`
+
+/-
+⊢ ∀ (a : ℝ≥0∞), a * a = a ↔ a = 0 ∨ a = 1 ∨ a = ⊤
+-/
+#check ENNReal.mul_self_eq_self_iff
+
 lemma indep_self (h : IndepSet A A) : ℙ A = 0 ∨ ℙ A = 1 := by {
-  sorry
+--  sorry
+  rw [IndepSet, inter_self] at h
+  rcases (ENNReal.mul_self_eq_self_iff (ℙ A)).mp h.symm with h1 | h2 | h3
+  . simp [h1]
+  . simp [h2]
+  . have := measure_ne_top ℙ A
+    contradiction
 }
 
 /-

@@ -202,7 +202,8 @@ lemma vitaliUnion_lower_bound : Icc 0 1 ⊆ vitaliUnion := by
   have ⟨x', h_x2⟩ : ∃ x' : { x : ℝ // x ∈ Icc 0 1 }, ↑ x' = x := CanLift.prf x h_x1
   let y : ℝ := ↑(vRep ⟦x'⟧)
   have h_y1 : y ∈ Icc 0 1 := (vRep ⟦x'⟧).property
-  have h_y2 : y ∈ vitaliSet := by simp [vitaliSet]
+  have h_y2 : y ∈ vitaliSet := by
+    simp [y, vitaliSet]
   have h_xy1 : x - y ∈ range ((↑) : ℚ → ℝ) := by
     have eq : vS.r x' (vRep ⟦x'⟧) := by
       refine Quotient.eq.mp ?_

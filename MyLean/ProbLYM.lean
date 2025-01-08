@@ -3,6 +3,7 @@ import Mathlib.Algebra.BigOperators.Ring
 import Mathlib.Algebra.Field.Rat
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Algebra.Order.Field.Rat
+import Mathlib.Probability.UniformOn
 
 set_option diagnostics true
 

@@ -16,9 +16,11 @@ open scoped ENNReal
 
 noncomputable section
 
-variable {α : Type*} [Fintype α] [DecidableEq α]
+variable (α : Type*) [Fintype α] [DecidableEq α]
 
-def Perm α := {l : List α // l.Nodup ∧ ∀ a, a ∈ l}
+def Perm := {l : List α // l.length = Fintype.card α ∧ ∀ a, a ∈ l}
+
+--def Perm := {l : List α // l.Nodup ∧ ∀ a, a ∈ l}
 
 instance fintype_perm : Fintype (Perm α) := by
   sorry
@@ -30,19 +32,17 @@ def hasSetPrefix (s : Finset α) : Finset (Perm α) :=
   {l : Perm α | (List.take s.card l.val).toFinset = s}
 
 theorem num_perms_set_prefix (s : Finset α) :
-    (hasSetPrefix s).card = s.card.factorial * (Fintype.card α - s.card).factorial := by
+    (hasSetPrefix α s).card = s.card.factorial * (Fintype.card α - s.card).factorial := by
   sorry
-
---def Perm α := {l : List α // l.length = Fintype.card α ∧ ∀ a, a ∈ l}
 
 instance measurableSpace_perm : MeasurableSpace (Perm α) := ⊤
 
 theorem count_perms_set_prefix (s : Finset α) :
-    Measure.count (hasSetPrefix s).toSet = s.card.factorial * (Fintype.card α - s.card).factorial := by
+    Measure.count (hasSetPrefix α s).toSet = s.card.factorial * (Fintype.card α - s.card).factorial := by
   sorry
 
 theorem prob_set_prefix (s : Finset α) :
-    uniformOn Set.univ (hasSetPrefix s).toSet = 1 / (Fintype.card α).choose s.card :=
+    uniformOn Set.univ (hasSetPrefix α s).toSet = 1 / (Fintype.card α).choose s.card :=
   sorry
 
 variable (𝓐 : Finset (Finset α))

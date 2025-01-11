@@ -1,6 +1,6 @@
 
-import Mathlib.Data.List.Basic
 import Mathlib.Data.Fin.Basic
+import Mathlib.Data.Fintype.Perm
 import Mathlib.Algebra.BigOperators.Ring
 import Mathlib.Algebra.Field.Rat
 import Mathlib.Algebra.Order.Field.Basic
@@ -18,18 +18,16 @@ noncomputable section
 
 variable (α : Type*) [Fintype α] [DecidableEq α]
 
-def Perm := {l : List α // l.length = Fintype.card α ∧ ∀ a, a ∈ l}
+def Perm := α ≃ Fin (Fintype.card α)
 
---def Perm := {l : List α // l.Nodup ∧ ∀ a, a ∈ l}
-
-instance fintype_perm : Fintype (Perm α) := by
-  sorry
+instance : Fintype (Perm α) := Equiv.instFintype
 
 theorem num_perms_all : Fintype.card (Perm α) = (Fintype.card α).factorial := by
-  sorry
+  refine Fintype.card_equiv ?_
+  exact Fintype.equivFinOfCardEq rfl
 
 def hasSetPrefix (s : Finset α) : Finset (Perm α) :=
-  {l : Perm α | (List.take s.card l.val).toFinset = s}
+  { f : Perm α | ∀ a ∈ s, f.toFun a ≤ s.card }
 
 theorem num_perms_set_prefix (s : Finset α) :
     (hasSetPrefix α s).card = s.card.factorial * (Fintype.card α - s.card).factorial := by

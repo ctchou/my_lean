@@ -23,20 +23,21 @@ def Perm := α ≃ Fin (Fintype.card α)
 instance : Fintype (Perm α) := Equiv.instFintype
 
 theorem num_perms_all : Fintype.card (Perm α) = (Fintype.card α).factorial := by
-  refine Fintype.card_equiv ?_
-  exact Fintype.equivFinOfCardEq rfl
+  refine Fintype.card_equiv (Fintype.equivFinOfCardEq rfl)
 
 def hasSetPrefix (s : Finset α) : Finset (Perm α) :=
-  { f : Perm α | ∀ a ∈ s, f.toFun a ≤ s.card }
+  { p : Perm α | ∀ a ∈ s, p.toFun a ≤ s.card }
 
 theorem num_perms_set_prefix (s : Finset α) :
     (hasSetPrefix α s).card = s.card.factorial * (Fintype.card α - s.card).factorial := by
+--    Fintype.card { p : Perm α // p ∈ hasSetPrefix α s } = s.card.factorial * (Fintype.card α - s.card).factorial := by
   sorry
 
-instance measurableSpace_perm : MeasurableSpace (Perm α) := ⊤
+instance : MeasurableSpace (Perm α) := ⊤
+instance : MeasurableSingletonClass (Perm α) := ⟨fun _ => trivial⟩
 
 theorem count_perms_set_prefix (s : Finset α) :
-    Measure.count (hasSetPrefix α s).toSet = s.card.factorial * (Fintype.card α - s.card).factorial := by
+    count (hasSetPrefix α s).toSet = s.card.factorial * (Fintype.card α - s.card).factorial := by
   sorry
 
 theorem prob_set_prefix (s : Finset α) :

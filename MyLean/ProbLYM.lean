@@ -10,7 +10,7 @@ import Mathlib.Probability.UniformOn
 --set_option diagnostics true
 --set_option diagnostics.threshold 10
 
-open BigOperators Set ProbabilityTheory MeasureTheory
+open BigOperators MeasureTheory ProbabilityTheory
 open MeasureTheory.Measure
 open scoped ENNReal
 
@@ -37,11 +37,17 @@ instance : MeasurableSpace (Perm α) := ⊤
 instance : MeasurableSingletonClass (Perm α) := ⟨fun _ => trivial⟩
 
 theorem count_perms_set_prefix (s : Finset α) :
-    count (hasSetPrefix α s).toSet = s.card.factorial * (Fintype.card α - s.card).factorial := by
-  sorry
+    count (hasSetPrefix α s).toSet = ↑(s.card.factorial * (Fintype.card α - s.card).factorial) := by
+  rw [← num_perms_set_prefix α s, count_apply_finset]
+
+#check Nat.choose_eq_factorial_div_factorial
 
 theorem prob_set_prefix (s : Finset α) :
-    uniformOn Set.univ (hasSetPrefix α s).toSet = 1 / (Fintype.card α).choose s.card :=
+    uniformOn Set.univ (hasSetPrefix α s).toSet = ↑(1 / (Fintype.card α).choose s.card) := by
+  rw [uniformOn_univ, count_perms_set_prefix, num_perms_all, Nat.choose_eq_factorial_div_factorial (Finset.card_le_univ s)]
+
+
+
   sorry
 
 variable (𝓐 : Finset (Finset α))

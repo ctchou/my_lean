@@ -66,7 +66,5 @@ theorem prob_set_prefix (s : Finset α) :
 variable (𝓐 : Finset (Finset α))
 
 theorem LYM_inequality (h𝓐 : IsAntichain (· ⊆ ·) (𝓐 : Set (Finset α))) :
-    ∑ s in 𝓐, (1 / (Fintype.card α).choose s.card) ≤ 1 := by
+    ∑ s in 𝓐, ((1 : ℝ) / (Fintype.card α).choose s.card) ≤ 1 := by
   sorry
-
-end

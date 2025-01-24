@@ -40,15 +40,28 @@ theorem count_perms_set_prefix (s : Finset α) :
     count (hasSetPrefix α s).toSet = ↑(s.card.factorial * (Fintype.card α - s.card).factorial) := by
   rw [← num_perms_set_prefix α s, count_apply_finset]
 
-#check Nat.choose_eq_factorial_div_factorial
+/-- The following proof is due to Aaron Liu. -/
+lemma aux_1 {k m n : ℕ} (hn : 0 < n) (heq : k * m = n) :
+    (↑ m : ENNReal) / (↑ n : ENNReal) = 1 / (↑ k : ENNReal) := by
+  subst heq
+  have hm : m ≠ 0 := by rintro rfl ; simp at hn
+  have hk : k ≠ 0 := by rintro rfl ; simp at hn
+  refine (ENNReal.toReal_eq_toReal ?_ ?_).mp ?_
+  · intro h
+    apply_fun ENNReal.toReal at h
+    simp [hm, hk] at h
+  · intro h
+    apply_fun ENNReal.toReal at h
+    simp [hk] at h
+  · field_simp
+    ring
 
 theorem prob_set_prefix (s : Finset α) :
-    uniformOn Set.univ (hasSetPrefix α s).toSet = ↑(1 / (Fintype.card α).choose s.card) := by
-  rw [uniformOn_univ, count_perms_set_prefix, num_perms_all, Nat.choose_eq_factorial_div_factorial (Finset.card_le_univ s)]
-
-
-
-  sorry
+    uniformOn Set.univ (hasSetPrefix α s).toSet = 1 / (Fintype.card α).choose s.card := by
+  rw [uniformOn_univ, count_perms_set_prefix, num_perms_all]
+  apply aux_1 (Nat.factorial_pos (Fintype.card α))
+  rw [← mul_assoc]
+  exact Nat.choose_mul_factorial_mul_factorial (Finset.card_le_univ s)
 
 variable (𝓐 : Finset (Finset α))
 

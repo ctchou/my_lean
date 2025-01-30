@@ -26,11 +26,14 @@ theorem num_perms : Fintype.card (Perm α) = (Fintype.card α).factorial := by
   refine Fintype.card_equiv (Fintype.equivFinOfCardEq rfl)
 
 def hasSetPrefix (s : Finset α) : Finset (Perm α) :=
-  { p : Perm α | ∀ a : α, a ∈ s ↔ p.toFun a ∈ { i : Fin (Fintype.card α) | i < s.card } }
+  { p : Perm α | ∀ a : α, a ∈ s ↔ p.toFun a < s.card }
+--  { p : Perm α | ∀ a : α, a ∈ s ↔ p.toFun a ∈ { i : Fin (Fintype.card α) | i < s.card } }
 
 theorem set_prefix_subset {s t : Finset α} {p : Perm α} (h_ps : p ∈ hasSetPrefix α s) (h_pt : p ∈ hasSetPrefix α t)
     (h_st : s.card ≤ t.card) : s ⊆ t := by
-  sorry
+  intro a h_as
+  simp [hasSetPrefix] at h_ps h_pt
+  exact (h_pt a).mpr (lt_of_le_of_lt' h_st ((h_ps a).mp h_as))
 
 theorem num_set_prefix (s : Finset α) :
     (hasSetPrefix α s).card = s.card.factorial * (Fintype.card α - s.card).factorial := by

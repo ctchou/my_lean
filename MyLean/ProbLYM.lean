@@ -10,7 +10,7 @@ import Mathlib.Probability.UniformOn
 --set_option diagnostics true
 --set_option diagnostics.threshold 10
 
-open BigOperators Finset Set MeasureTheory ProbabilityTheory
+open BigOperators Equiv Finset Set MeasureTheory ProbabilityTheory
 open MeasureTheory.Measure
 open scoped ENNReal
 
@@ -18,22 +18,25 @@ noncomputable section
 
 variable (α : Type*) [Fintype α] [DecidableEq α]
 
-def Perm := α ≃ Fin (Fintype.card α)
+--def Perm := α ≃ Fin (Fintype.card α)
 
-instance : Fintype (Perm α) := Equiv.instFintype
+--instance : Fintype (Perm α) := Equiv.instFintype
 
 theorem num_perms : Fintype.card (Perm α) = (Fintype.card α).factorial := by
-  refine Fintype.card_equiv (Fintype.equivFinOfCardEq rfl)
+  exact Fintype.card_perm
+--  refine Fintype.card_equiv (Fintype.equivFinOfCardEq rfl)
 
 def hasSetPrefix (s : Finset α) : Finset (Perm α) :=
-  { p : Perm α | ∀ a : α, a ∈ s ↔ p.toFun a < s.card }
+  { p : Perm α | ∀ a : α, a ∈ s ↔ p a ∈ s }
+--  { p : Perm α | ∀ a : α, a ∈ s ↔ p.toFun a < s.card }
 --  { p : Perm α | ∀ a : α, a ∈ s ↔ p.toFun a ∈ { i : Fin (Fintype.card α) | i < s.card } }
 
 theorem set_prefix_subset {s t : Finset α} {p : Perm α} (h_ps : p ∈ hasSetPrefix α s) (h_pt : p ∈ hasSetPrefix α t)
     (h_st : s.card ≤ t.card) : s ⊆ t := by
-  intro a h_as
-  simp [hasSetPrefix] at h_ps h_pt
-  exact (h_pt a).mpr (lt_of_le_of_lt' h_st ((h_ps a).mp h_as))
+  sorry
+  -- intro a h_as
+  -- simp [hasSetPrefix] at h_ps h_pt
+  -- exact (h_pt a).mpr (lt_of_le_of_lt' h_st ((h_ps a).mp h_as))
 
 theorem num_set_prefix (s : Finset α) :
     (hasSetPrefix α s).card = s.card.factorial * (Fintype.card α - s.card).factorial := by

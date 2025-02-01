@@ -12,7 +12,7 @@ import Mathlib.Probability.UniformOn
 --set_option diagnostics true
 --set_option diagnostics.threshold 10
 
-open BigOperators Finset Set MeasureTheory ProbabilityTheory
+open BigOperators Fintype Set MeasureTheory ProbabilityTheory
 open MeasureTheory.Measure
 open scoped ENNReal
 
@@ -20,11 +20,20 @@ noncomputable section
 
 variable (α : Type*) [Fintype α] [DecidableEq α]
 
-def Numbering := α ≃ Fin (Fintype.card α)
+def initSeg (n : ℕ) : Finset (Fin (card α)) := { i : Fin (card α) | i < n }
+
+def setNumbering (s : Finset α) : Finset (α → Fin (card α)) :=
+  { f : α → Fin (card α) | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
+
+theorem set_numbering_card (s : Finset α) :
+    (setNumbering α s).card = s.card.factorial := by
+  sorry
+
+def Numbering := α ≃ Fin (card α)
 
 instance : Fintype (Numbering α) := Equiv.instFintype
 
-theorem numbering_card : Fintype.card (Numbering α) = (Fintype.card α).factorial := by
+theorem numbering_card : card (Numbering α) = (card α).factorial := by
   exact Fintype.card_equiv (Fintype.equivFinOfCardEq rfl)
 
 def setPrefix (s : Finset α) : Finset (Numbering α) :=
@@ -36,22 +45,15 @@ theorem set_prefix_subset {s t : Finset α} {p : Numbering α} (h_s : p ∈ setP
   simp [setPrefix] at h_s h_t
   exact (h_t a).mpr (lt_of_le_of_lt' h_st ((h_s a).mp h_as))
 
-def setNumbering (s : Finset α) : Finset (α → Fin (Fintype.card α)) :=
-  { f : α → Fin (Fintype.card α) | (∀ a ∈ s, f a < s.card) ∧ (∀ a ∈ s, ∀ a' ∈ s, f a = f a' → a = a') ∧ (∀ b ∈ sᶜ, (f b : ℕ) = 0) }
-
-theorem set_numbering_card (s : Finset α) :
-    (setNumbering α s).card = s.card.factorial := by
-  sorry
-
 theorem set_prefix_card (s : Finset α) :
-    (setPrefix α s).card = s.card.factorial * (Fintype.card α - s.card).factorial := by
+    (setPrefix α s).card = s.card.factorial * (card α - s.card).factorial := by
   sorry
 
 instance : MeasurableSpace (Numbering α) := ⊤
 instance : MeasurableSingletonClass (Numbering α) := ⟨fun _ => trivial⟩
 
 lemma set_prefix_count (s : Finset α) :
-    count (setPrefix α s).toSet = ↑(s.card.factorial * (Fintype.card α - s.card).factorial) := by
+    count (setPrefix α s).toSet = ↑(s.card.factorial * (card α - s.card).factorial) := by
   rw [← set_prefix_card α s, count_apply_finset]
 
 lemma aux_1 {k m n : ℕ} (hn : 0 < n) (heq : k * m = n) :
@@ -71,9 +73,9 @@ lemma aux_1 {k m n : ℕ} (hn : 0 < n) (heq : k * m = n) :
     ring
 
 theorem set_prefix_prob (s : Finset α) :
-    uniformOn Set.univ (setPrefix α s).toSet = 1 / (Fintype.card α).choose s.card := by
+    uniformOn Set.univ (setPrefix α s).toSet = 1 / (card α).choose s.card := by
   rw [uniformOn_univ, set_prefix_count, numbering_card]
-  apply aux_1 (Nat.factorial_pos (Fintype.card α))
+  apply aux_1 (Nat.factorial_pos (card α))
   rw [← mul_assoc]
   exact Nat.choose_mul_factorial_mul_factorial (Finset.card_le_univ s)
 
@@ -81,7 +83,7 @@ theorem set_prefix_disj {s t : Finset α} (h_st : ¬ s ⊆ t) (h_ts : ¬ t ⊆ s
     Disjoint (setPrefix α s).toSet (setPrefix α t).toSet := by
   refine Set.disjoint_iff.mpr ?_
   intro p
-  simp only [mem_inter_iff, mem_coe, mem_empty_iff_false, imp_false, not_and]
+  simp only [mem_inter_iff, Finset.mem_coe, mem_empty_iff_false, imp_false, not_and]
   intro h_s h_t
   rcases Nat.le_total s.card t.card with h_st' | h_ts'
   · exact h_st (set_prefix_subset α h_s h_t h_st')
@@ -90,5 +92,5 @@ theorem set_prefix_disj {s t : Finset α} (h_st : ¬ s ⊆ t) (h_ts : ¬ t ⊆ s
 variable (𝓐 : Finset (Finset α))
 
 theorem LYM_inequality (h𝓐 : IsAntichain (· ⊆ ·) (𝓐 : Set (Finset α))) :
-    ∑ s in 𝓐, ((1 : ℝ) / (Fintype.card α).choose s.card) ≤ 1 := by
+    ∑ s in 𝓐, ((1 : ℝ) / (card α).choose s.card) ≤ 1 := by
   sorry

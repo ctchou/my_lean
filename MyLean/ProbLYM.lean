@@ -7,6 +7,8 @@ import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Algebra.Order.Field.Rat
 import Mathlib.Probability.UniformOn
 
+--set_option linter.unusedSectionVars false
+
 --set_option diagnostics true
 --set_option diagnostics.threshold 10
 
@@ -27,7 +29,6 @@ theorem numbering_card : Fintype.card (Numbering α) = (Fintype.card α).factori
 
 def setPrefix (s : Finset α) : Finset (Numbering α) :=
   { p : Numbering α | ∀ a : α, a ∈ s ↔ p.toFun a < s.card }
---  { p : Numbering α | ∀ a : α, a ∈ s ↔ p.toFun a ∈ { i : Fin (Fintype.card α) | i < s.card } }
 
 theorem set_prefix_subset {s t : Finset α} {p : Numbering α} (h_s : p ∈ setPrefix α s) (h_t : p ∈ setPrefix α t)
     (h_st : s.card ≤ t.card) : s ⊆ t := by
@@ -35,9 +36,15 @@ theorem set_prefix_subset {s t : Finset α} {p : Numbering α} (h_s : p ∈ setP
   simp [setPrefix] at h_s h_t
   exact (h_t a).mpr (lt_of_le_of_lt' h_st ((h_s a).mp h_as))
 
+def setNumbering (s : Finset α) : Finset (α → Fin (Fintype.card α)) :=
+  { f : α → Fin (Fintype.card α) | (∀ a ∈ s, f a < s.card) ∧ (∀ a ∈ s, ∀ a' ∈ s, f a = f a' → a = a') ∧ (∀ b ∈ sᶜ, (f b : ℕ) = 0) }
+
+theorem set_numbering_card (s : Finset α) :
+    (setNumbering α s).card = s.card.factorial := by
+  sorry
+
 theorem set_prefix_card (s : Finset α) :
     (setPrefix α s).card = s.card.factorial * (Fintype.card α - s.card).factorial := by
---    Fintype.card { p : Numbering α // p ∈ setPrefix α s } = s.card.factorial * (Fintype.card α - s.card).factorial := by
   sorry
 
 instance : MeasurableSpace (Numbering α) := ⊤

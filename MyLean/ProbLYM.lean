@@ -22,30 +22,30 @@ def Numbering := α ≃ Fin (Fintype.card α)
 
 instance : Fintype (Numbering α) := Equiv.instFintype
 
-theorem card_numbering : Fintype.card (Numbering α) = (Fintype.card α).factorial := by
+theorem numbering_card : Fintype.card (Numbering α) = (Fintype.card α).factorial := by
   exact Fintype.card_equiv (Fintype.equivFinOfCardEq rfl)
 
-def hasSetPrefix (s : Finset α) : Finset (Numbering α) :=
+def setPrefix (s : Finset α) : Finset (Numbering α) :=
   { p : Numbering α | ∀ a : α, a ∈ s ↔ p.toFun a < s.card }
 --  { p : Numbering α | ∀ a : α, a ∈ s ↔ p.toFun a ∈ { i : Fin (Fintype.card α) | i < s.card } }
 
-theorem set_prefix_subset {s t : Finset α} {p : Numbering α} (h_s : p ∈ hasSetPrefix α s) (h_t : p ∈ hasSetPrefix α t)
+theorem set_prefix_subset {s t : Finset α} {p : Numbering α} (h_s : p ∈ setPrefix α s) (h_t : p ∈ setPrefix α t)
     (h_st : s.card ≤ t.card) : s ⊆ t := by
   intro a h_as
-  simp [hasSetPrefix] at h_s h_t
+  simp [setPrefix] at h_s h_t
   exact (h_t a).mpr (lt_of_le_of_lt' h_st ((h_s a).mp h_as))
 
-theorem card_set_prefix (s : Finset α) :
-    (hasSetPrefix α s).card = s.card.factorial * (Fintype.card α - s.card).factorial := by
---    Fintype.card { p : Numbering α // p ∈ hasSetPrefix α s } = s.card.factorial * (Fintype.card α - s.card).factorial := by
+theorem set_prefix_card (s : Finset α) :
+    (setPrefix α s).card = s.card.factorial * (Fintype.card α - s.card).factorial := by
+--    Fintype.card { p : Numbering α // p ∈ setPrefix α s } = s.card.factorial * (Fintype.card α - s.card).factorial := by
   sorry
 
 instance : MeasurableSpace (Numbering α) := ⊤
 instance : MeasurableSingletonClass (Numbering α) := ⟨fun _ => trivial⟩
 
-lemma count_set_prefix (s : Finset α) :
-    count (hasSetPrefix α s).toSet = ↑(s.card.factorial * (Fintype.card α - s.card).factorial) := by
-  rw [← card_set_prefix α s, count_apply_finset]
+lemma set_prefix_count (s : Finset α) :
+    count (setPrefix α s).toSet = ↑(s.card.factorial * (Fintype.card α - s.card).factorial) := by
+  rw [← set_prefix_card α s, count_apply_finset]
 
 lemma aux_1 {k m n : ℕ} (hn : 0 < n) (heq : k * m = n) :
     (↑ m : ENNReal) / (↑ n : ENNReal) = 1 / (↑ k : ENNReal) := by
@@ -63,15 +63,15 @@ lemma aux_1 {k m n : ℕ} (hn : 0 < n) (heq : k * m = n) :
   · field_simp
     ring
 
-theorem prob_set_prefix (s : Finset α) :
-    uniformOn Set.univ (hasSetPrefix α s).toSet = 1 / (Fintype.card α).choose s.card := by
-  rw [uniformOn_univ, count_set_prefix, card_numbering]
+theorem set_prefix_prob (s : Finset α) :
+    uniformOn Set.univ (setPrefix α s).toSet = 1 / (Fintype.card α).choose s.card := by
+  rw [uniformOn_univ, set_prefix_count, numbering_card]
   apply aux_1 (Nat.factorial_pos (Fintype.card α))
   rw [← mul_assoc]
   exact Nat.choose_mul_factorial_mul_factorial (Finset.card_le_univ s)
 
-theorem disj_set_prefix {s t : Finset α} (h_st : ¬ s ⊆ t) (h_ts : ¬ t ⊆ s) :
-    Disjoint (hasSetPrefix α s).toSet (hasSetPrefix α t).toSet := by
+theorem set_prefix_disj {s t : Finset α} (h_st : ¬ s ⊆ t) (h_ts : ¬ t ⊆ s) :
+    Disjoint (setPrefix α s).toSet (setPrefix α t).toSet := by
   refine Set.disjoint_iff.mpr ?_
   intro p
   simp only [mem_inter_iff, mem_coe, mem_empty_iff_false, imp_false, not_and]

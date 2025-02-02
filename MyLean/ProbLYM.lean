@@ -27,6 +27,10 @@ def setNumbering (s : Finset α) : Finset (α → Fin (card α)) :=
 
 theorem set_numbering_card (s : Finset α) :
     (setNumbering α s).card = s.card.factorial := by
+  generalize h : s.card = n
+  revert s
+  induction' n with n ih
+
   sorry
 
 def Numbering := α ≃ Fin (card α)

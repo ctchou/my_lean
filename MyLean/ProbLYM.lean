@@ -25,7 +25,7 @@ def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | i < n }
 def setNumbering (s : Finset α) : Finset (α → Fin (card α + 1)) :=
   { f | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
 
-lemma set_numbering_empty : setNumbering α ∅ = {fun a ↦ 0} := by
+lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
   apply Finset.ext
   intro f
   simp [setNumbering, initSeg]
@@ -35,6 +35,14 @@ lemma set_numbering_empty : setNumbering α ∅ = {fun a ↦ 0} := by
   · intro a
     simp [h]
 
+def subSetNumbering (s : Finset α) (a : α) : Finset (α → Fin (card α + 1)) :=
+  { f | ∃ f' ∈ setNumbering α (s \ {a}), EqOn f f' (s \ {a}) ∧ f a = s.card - 1 ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
+
+--  (setNumbering α (s \ {a})).biUnion (fun f' ↦ { f | EqOn f f' (s \ {a}) ∧ f a = s.card - 1 ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 })
+
+-- lemma set_numbering_succ (s : Finset α) {n : ℕ} (h : s.card = n + 1) :
+--     setNumbering α s =
+
 theorem set_numbering_card (s : Finset α) :
     (setNumbering α s).card = s.card.factorial := by
   generalize h : s.card = n
@@ -42,8 +50,19 @@ theorem set_numbering_card (s : Finset α) :
   · rw [Finset.card_eq_zero] at h
     simp [h]
     apply Finset.card_eq_one.mpr
-    use (fun a ↦ 0)
+    use (fun _ ↦ 0)
     exact set_numbering_empty α
+  /-
+  case succ
+  α : Type u_1
+  inst✝¹ : Fintype α
+  inst✝ : DecidableEq α
+  n : ℕ
+  ih : ∀ (s : Finset α), s.card = n → (setNumbering α s).card = n.factorial
+  s : Finset α
+  h : s.card = n + 1
+  ⊢ (setNumbering α s).card = (n + 1).factorial
+  -/
 
   sorry
 

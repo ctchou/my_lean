@@ -25,6 +25,16 @@ def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | i < n }
 def setNumbering (s : Finset α) : Finset (α → Fin (card α + 1)) :=
   { f | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
 
+lemma set_numbering_empty : setNumbering α ∅ = {fun a ↦ 0} := by
+  apply Finset.ext
+  intro f
+  simp [setNumbering, initSeg]
+  constructor <;> intro h
+  · ext a
+    simp [h]
+  · intro a
+    simp [h]
+
 theorem set_numbering_card (s : Finset α) :
     (setNumbering α s).card = s.card.factorial := by
   generalize h : s.card = n
@@ -33,10 +43,8 @@ theorem set_numbering_card (s : Finset α) :
     simp [h]
     apply Finset.card_eq_one.mpr
     use (fun a ↦ 0)
-    rw [setNumbering]
+    exact set_numbering_empty α
 
-
-    sorry
   sorry
 
 def Numbering := α ≃ Fin (card α)

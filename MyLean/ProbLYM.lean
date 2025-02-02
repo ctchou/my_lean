@@ -36,9 +36,7 @@ lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
     simp [h]
 
 def subSetNumbering (s : Finset α) (a : α) : Finset (α → Fin (card α + 1)) :=
-  { f | ∃ f' ∈ setNumbering α (s \ {a}), EqOn f f' (s \ {a}) ∧ f a = s.card - 1 ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
-
---  (setNumbering α (s \ {a})).biUnion (fun f' ↦ { f | EqOn f f' (s \ {a}) ∧ f a = s.card - 1 ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 })
+  { f | ∃ f' ∈ setNumbering α (s \ {a}), ∀ b, f b = if b ∈ s \ {a} then f' b else if b = a then s.card -1 else 0 }
 
 -- lemma set_numbering_succ (s : Finset α) {n : ℕ} (h : s.card = n + 1) :
 --     setNumbering α s =

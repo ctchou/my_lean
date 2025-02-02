@@ -20,17 +20,23 @@ noncomputable section
 
 variable (α : Type*) [Fintype α] [DecidableEq α]
 
-def initSeg (n : ℕ) : Finset (Fin (card α)) := { i : Fin (card α) | i < n }
+def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | i < n }
 
-def setNumbering (s : Finset α) : Finset (α → Fin (card α)) :=
-  { f : α → Fin (card α) | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
+def setNumbering (s : Finset α) : Finset (α → Fin (card α + 1)) :=
+  { f | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
 
 theorem set_numbering_card (s : Finset α) :
     (setNumbering α s).card = s.card.factorial := by
   generalize h : s.card = n
-  revert s
-  induction' n with n ih
+  induction' n with n ih generalizing s
+  · rw [Finset.card_eq_zero] at h
+    simp [h]
+    apply Finset.card_eq_one.mpr
+    use (fun a ↦ 0)
+    rw [setNumbering]
 
+
+    sorry
   sorry
 
 def Numbering := α ≃ Fin (card α)

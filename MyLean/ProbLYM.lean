@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2024-present Ching-Tsun Chou. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Ching-Tsun Chou
+-/
 
 import Mathlib.Data.Fin.Basic
 import Mathlib.Data.Fintype.Perm
@@ -12,7 +17,7 @@ import Mathlib.Probability.UniformOn
 --set_option diagnostics true
 --set_option diagnostics.threshold 10
 
-open BigOperators Fintype Set MeasureTheory ProbabilityTheory
+open BigOperators Fintype Finset Set MeasureTheory ProbabilityTheory
 open MeasureTheory.Measure
 open scoped ENNReal
 
@@ -39,18 +44,26 @@ def appendNumbering (f : PreNumbering α) (s : Finset α) (a : α) : PreNumberin
   fun a' ↦ if a' ∈ s then f a' else
            if a' = a then s.card else 0
 
-def subSetNumbering (s : Finset α) (a : α) : Finset (PreNumbering α) :=
+def subsetNumbering (s : Finset α) (a : α) : Finset (PreNumbering α) :=
   { f | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
 
-lemma set_numbering_disjoint {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
-    ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (subSetNumbering α s a) (subSetNumbering α s a') := by
-  intro a h_as a' h_a's h_neq
+lemma subset_numbering_card {s : Finset α} {a : α} :
+    ∀ a ∈ s, (subsetNumbering α s a).card = (setNumbering α (s \ {a})).card := by
+  sorry
+
+lemma subset_numbering_disjoint {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
+    ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (subsetNumbering α s a) (subsetNumbering α s a') := by
+  intro a h_as a' h_a's h_aa'
+  apply Finset.disjoint_left.mpr
+  intro f h_fa h_fa'
 
   sorry
 
 lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
-    setNumbering α s = (s.biUnion (subSetNumbering α s)) := by
+    setNumbering α s = (s.biUnion (subsetNumbering α s)) := by
   sorry
+
+instance : AddCommMonoid ℕ := Nat.instAddCommMonoid
 
 theorem set_numbering_card (s : Finset α) :
     (setNumbering α s).card = s.card.factorial := by
@@ -61,19 +74,24 @@ theorem set_numbering_card (s : Finset α) :
     apply Finset.card_eq_one.mpr
     use (fun _ ↦ 0)
     exact set_numbering_empty α
-  /-
-  case succ
-  α : Type u_1
-  inst✝¹ : Fintype α
-  inst✝ : DecidableEq α
-  n : ℕ
-  ih : ∀ (s : Finset α), s.card = n → (setNumbering α s).card = n.factorial
-  s : Finset α
-  h : s.card = n + 1
-  ⊢ (setNumbering α s).card = (n + 1).factorial
-  -/
+  rw [set_numbering_union α h, card_biUnion (subset_numbering_disjoint α h),
+      Finset.sum_congr (f := fun a ↦ #(subsetNumbering α s a)) (g := fun a ↦ #(setNumbering α (s \ {a}))) (rfl : s = s)]
+
+
+
 
   sorry
+/-
+case succ
+α : Type u_1
+inst✝¹ : Fintype α
+inst✝ : DecidableEq α
+n : ℕ
+ih : ∀ (s : Finset α), #s = n → #(setNumbering α s) = n.factorial
+s : Finset α
+h : #s = n + 1
+⊢ ∑ u ∈ s, #(subsetNumbering α s u) = (n + 1).factorial
+-/
 
 def Numbering := α ≃ Fin (card α)
 
@@ -140,3 +158,5 @@ variable (𝓐 : Finset (Finset α))
 theorem LYM_inequality (h𝓐 : IsAntichain (· ⊆ ·) (𝓐 : Set (Finset α))) :
     ∑ s in 𝓐, ((1 : ℝ) / (card α).choose s.card) ≤ 1 := by
   sorry
+
+end

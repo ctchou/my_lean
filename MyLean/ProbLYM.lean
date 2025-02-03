@@ -22,7 +22,9 @@ variable (α : Type*) [Fintype α] [DecidableEq α]
 
 def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | i < n }
 
-def setNumbering (s : Finset α) : Finset (α → Fin (card α + 1)) :=
+abbrev PreNumbering := α → Fin (card α + 1)
+
+def setNumbering (s : Finset α) : Finset (PreNumbering α) :=
   { f | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
 
 lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
@@ -30,20 +32,20 @@ lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
   intro f
   simp [setNumbering, initSeg]
   constructor <;> intro h
-  · ext a
-    simp [h]
-  · intro a
-    simp [h]
+  · ext a ; simp [h]
+  · intro a ; simp [h]
 
-def appendNumbering (f : α → Fin (card α + 1)) (s : Finset α) (a : α) : α → Fin (card α + 1) :=
+def appendNumbering (f : PreNumbering α) (s : Finset α) (a : α) : PreNumbering α :=
   fun a' ↦ if a' ∈ s then f a' else
            if a' = a then s.card else 0
 
-def subSetNumbering (s : Finset α) (a : α) : Finset (α → Fin (card α + 1)) :=
+def subSetNumbering (s : Finset α) (a : α) : Finset (PreNumbering α) :=
   { f | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
 
 lemma set_numbering_disjoint (s : Finset α) {n : ℕ} (h : s.card = n + 1) :
     ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (subSetNumbering α s a) (subSetNumbering α s a') := by
+  intro a h_as a' h_a's h_neq
+
   sorry
 
 lemma set_numbering_union (s : Finset α) {n : ℕ} (h : s.card = n + 1) :

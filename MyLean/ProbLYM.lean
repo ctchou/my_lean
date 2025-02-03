@@ -20,9 +20,9 @@ noncomputable section
 
 variable (α : Type*) [Fintype α] [DecidableEq α]
 
-def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | i < n }
-
 abbrev PreNumbering := α → Fin (card α + 1)
+
+def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | i < n }
 
 def setNumbering (s : Finset α) : Finset (PreNumbering α) :=
   { f | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
@@ -42,13 +42,13 @@ def appendNumbering (f : PreNumbering α) (s : Finset α) (a : α) : PreNumberin
 def subSetNumbering (s : Finset α) (a : α) : Finset (PreNumbering α) :=
   { f | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
 
-lemma set_numbering_disjoint (s : Finset α) {n : ℕ} (h : s.card = n + 1) :
+lemma set_numbering_disjoint {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (subSetNumbering α s a) (subSetNumbering α s a') := by
   intro a h_as a' h_a's h_neq
 
   sorry
 
-lemma set_numbering_union (s : Finset α) {n : ℕ} (h : s.card = n + 1) :
+lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     setNumbering α s = (s.biUnion (subSetNumbering α s)) := by
   sorry
 

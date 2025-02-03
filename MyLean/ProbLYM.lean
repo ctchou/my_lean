@@ -47,7 +47,7 @@ def appendNumbering (f : PreNumbering α) (s : Finset α) (a : α) : PreNumberin
 def subsetNumbering (s : Finset α) (a : α) : Finset (PreNumbering α) :=
   { f | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
 
-lemma subset_numbering_card {s : Finset α} {a : α} :
+lemma subset_numbering_card {s : Finset α} :
     ∀ a ∈ s, (subsetNumbering α s a).card = (setNumbering α (s \ {a})).card := by
   sorry
 
@@ -63,8 +63,6 @@ lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     setNumbering α s = (s.biUnion (subsetNumbering α s)) := by
   sorry
 
-instance : AddCommMonoid ℕ := Nat.instAddCommMonoid
-
 theorem set_numbering_card (s : Finset α) :
     (setNumbering α s).card = s.card.factorial := by
   generalize h : s.card = n
@@ -74,24 +72,17 @@ theorem set_numbering_card (s : Finset α) :
     apply Finset.card_eq_one.mpr
     use (fun _ ↦ 0)
     exact set_numbering_empty α
-  rw [set_numbering_union α h, card_biUnion (subset_numbering_disjoint α h),
-      Finset.sum_congr (f := fun a ↦ #(subsetNumbering α s a)) (g := fun a ↦ #(setNumbering α (s \ {a}))) (rfl : s = s)]
+  have ih' : ∀ a ∈ s, (setNumbering α (s \ {a})).card = n.factorial := by
+    intro a h_mem
+    have h_diff := Finset.card_sdiff (Finset.singleton_subset_iff.mpr h_mem)
+    simp [h] at h_diff
+    exact ih (s \ {a}) h_diff
+  simp [set_numbering_union α h, card_biUnion (subset_numbering_disjoint α h),
+        Finset.sum_congr (rfl : s = s) (subset_numbering_card α),
+        Finset.sum_congr (rfl : s = s) ih',
+        Finset.sum_const n.factorial, h, Nat.factorial_succ]
 
-
-
-
-  sorry
-/-
-case succ
-α : Type u_1
-inst✝¹ : Fintype α
-inst✝ : DecidableEq α
-n : ℕ
-ih : ∀ (s : Finset α), #s = n → #(setNumbering α s) = n.factorial
-s : Finset α
-h : #s = n + 1
-⊢ ∑ u ∈ s, #(subsetNumbering α s u) = (n + 1).factorial
--/
+/-- **************************************************************************************************** -/
 
 def Numbering := α ≃ Fin (card α)
 

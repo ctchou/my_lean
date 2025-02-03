@@ -35,11 +35,20 @@ lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
   · intro a
     simp [h]
 
-def subSetNumbering (s : Finset α) (a : α) : Finset (α → Fin (card α + 1)) :=
-  { f | ∃ f' ∈ setNumbering α (s \ {a}), ∀ b, f b = if b ∈ s \ {a} then f' b else if b = a then s.card -1 else 0 }
+def appendNumbering (f : α → Fin (card α + 1)) (s : Finset α) (a : α) : α → Fin (card α + 1) :=
+  fun a' ↦ if a' ∈ s then f a' else
+           if a' = a then s.card else 0
 
--- lemma set_numbering_succ (s : Finset α) {n : ℕ} (h : s.card = n + 1) :
---     setNumbering α s =
+def subSetNumbering (s : Finset α) (a : α) : Finset (α → Fin (card α + 1)) :=
+  { f | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
+
+lemma set_numbering_disjoint (s : Finset α) {n : ℕ} (h : s.card = n + 1) :
+    ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (subSetNumbering α s a) (subSetNumbering α s a') := by
+  sorry
+
+lemma set_numbering_union (s : Finset α) {n : ℕ} (h : s.card = n + 1) :
+    setNumbering α s = (s.biUnion (subSetNumbering α s)) := by
+  sorry
 
 theorem set_numbering_card (s : Finset α) :
     (setNumbering α s).card = s.card.factorial := by

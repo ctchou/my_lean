@@ -39,21 +39,6 @@ lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
   · ext a ; simp [h]
   · intro a ; simp [h]
 
--- def appendNumbering (f : PreNumbering α) (s : Finset α) (a : α) : PreNumbering α :=
---   fun a' ↦ if a' ∈ s then f a' else
---            if a' = a then s.card else 0
-
--- lemma append_numbering_closure {f : PreNumbering α} {s : Finset α} {a : α}
---     (hf : f ∈ setNumbering α s) (ha : ¬ a ∈ s) : appendNumbering α f s a ∈ setNumbering α (s ∪ {a}) := by
---   simp [setNumbering]
---   constructor
---   · have : initSeg α (s ∪ {a}) = insert s.card (initSeg α s) := by
---       sorry
-
---     sorry
---   . intro a' h_a's h_a'a
---     simp [appendNumbering, h_a's, h_a'a]
-
 def setNumberingLast (s : Finset α) (a : α) : Finset (PreNumbering α) :=
   { f ∈ setNumbering α s | f a = s.card - 1 }
 
@@ -75,14 +60,41 @@ lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
   have := (InjOn.eq_iff (BijOn.injOn h_fs) h_as h_a's ).mp h_fn
   contradiction
 
+example (s : Finset α) (n : ℕ) (h : s.card = n + 1) : ↑n < Fin.last (Fintype.card α) := by
+  have h1 := Finset.card_le_univ s
+  simp [h] at h1
+  have h2 : n % (Fintype.card α + 1) = n := by
+    apply Nat.mod_eq_of_lt
+    linarith
+  apply Fin.lt_def.mpr
+  simp [Fin.val_last, h2]
+  linarith
+
 lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     setNumbering α s = (s.biUnion (setNumberingLast α s)) := by
   apply Finset.ext ; intro f
   simp [setNumberingLast]
   constructor
   · intro h_fs
-
-    sorry
+    have h_surj : SurjOn f s (initSeg α s.card) := by
+      simp [setNumbering] at h_fs
+      exact BijOn.surjOn h_fs.1
+    rw [SurjOn] at h_surj
+    have h_iseg : ↑(s.card - 1) ∈ (initSeg α s.card) := by
+      simp [initSeg, h, Fin.val_last]
+      have h1 := Finset.card_le_univ s
+      simp [h] at h1
+      have h2 : n % (Fintype.card α + 1) = n := by
+        apply Nat.mod_eq_of_lt
+        linarith
+      apply Fin.lt_def.mpr
+      simp [Fin.val_last, h2]
+      linarith
+    have h_last := h_surj h_iseg
+    simp at h_last
+    rcases h_last with ⟨a, h_as, h_fa⟩
+    use a
+    simp [h_as, h_fs, h_fa, h]
   · rintro ⟨a, h_as, h_fs, _⟩
     exact h_fs
 
@@ -104,6 +116,21 @@ theorem set_numbering_card (s : Finset α) :
         Finset.sum_congr (rfl : s = s) (set_numbering_last_card α),
         Finset.sum_congr (rfl : s = s) ih',
         Finset.sum_const n.factorial, h, Nat.factorial_succ]
+
+-- def appendNumbering (f : PreNumbering α) (s : Finset α) (a : α) : PreNumbering α :=
+--   fun a' ↦ if a' ∈ s then f a' else
+--            if a' = a then s.card else 0
+
+-- lemma append_numbering_closure {f : PreNumbering α} {s : Finset α} {a : α}
+--     (hf : f ∈ setNumbering α s) (ha : ¬ a ∈ s) : appendNumbering α f s a ∈ setNumbering α (s ∪ {a}) := by
+--   simp [setNumbering]
+--   constructor
+--   · have : initSeg α (s ∪ {a}) = insert s.card (initSeg α s) := by
+--       sorry
+
+--     sorry
+--   . intro a' h_a's h_a'a
+--     simp [appendNumbering, h_a's, h_a'a]
 
 /-- **************************************************************************************************** -/
 

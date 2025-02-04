@@ -40,12 +40,25 @@ lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
   · ext a ; simp [h]
   · intro a ; simp [h]
 
-def appendNumbering (f : PreNumbering α) (s : Finset α) (a : α) : PreNumbering α :=
-  fun a' ↦ if a' ∈ s then f a' else
-           if a' = a then s.card else 0
+-- def appendNumbering (f : PreNumbering α) (s : Finset α) (a : α) : PreNumbering α :=
+--   fun a' ↦ if a' ∈ s then f a' else
+--            if a' = a then s.card else 0
+
+-- lemma append_numbering_closure {f : PreNumbering α} {s : Finset α} {a : α}
+--     (hf : f ∈ setNumbering α s) (ha : ¬ a ∈ s) : appendNumbering α f s a ∈ setNumbering α (s ∪ {a}) := by
+--   simp [setNumbering]
+--   constructor
+--   · have : initSeg α (s ∪ {a}) = insert s.card (initSeg α s) := by
+--       sorry
+
+--     sorry
+--   . intro a' h_a's h_a'a
+--     simp [appendNumbering, h_a's, h_a'a]
 
 def subsetNumbering (s : Finset α) (a : α) : Finset (PreNumbering α) :=
-  { f | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
+  { f ∈ setNumbering α s | f a = s.card - 1 }
+
+--  { f ∈ setNumbering α s | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
 
 lemma subset_numbering_card {s : Finset α} :
     ∀ a ∈ s, (subsetNumbering α s a).card = (setNumbering α (s \ {a})).card := by
@@ -56,6 +69,10 @@ lemma subset_numbering_disjoint {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
   intro a h_as a' h_a's h_aa'
   apply Finset.disjoint_left.mpr
   intro f h_fa h_fa'
+  simp [subsetNumbering] at h_fa h_fa'
+  rcases h_fa with ⟨g, _, h_fg⟩
+  rcases h_fa' with ⟨g', _, h_fg'⟩
+
 
   sorry
 

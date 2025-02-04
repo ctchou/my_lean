@@ -33,8 +33,7 @@ def setNumbering (s : Finset α) : Finset (PreNumbering α) :=
   { f | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
 
 lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
-  apply Finset.ext
-  intro f
+  apply Finset.ext ; intro f
   simp [setNumbering, initSeg]
   constructor <;> intro h
   · ext a ; simp [h]
@@ -60,25 +59,32 @@ def setNumberingLast (s : Finset α) (a : α) : Finset (PreNumbering α) :=
 
 --  { f ∈ setNumbering α s | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
 
-lemma subset_numbering_card {s : Finset α} :
+lemma set_numbering_last_card {s : Finset α} :
     ∀ a ∈ s, (setNumberingLast α s a).card = (setNumbering α (s \ {a})).card := by
   sorry
 
-lemma subset_numbering_disjoint {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
+lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (setNumberingLast α s a) (setNumberingLast α s a') := by
   intro a h_as a' h_a's h_aa'
   apply Finset.disjoint_left.mpr
   intro f h_fa h_fa'
-  simp [setNumberingLast] at h_fa h_fa'
-  -- rcases h_fa with ⟨g, _, h_fg⟩
-  -- rcases h_fa' with ⟨g', _, h_fg'⟩
-
-
-  sorry
+  simp [setNumberingLast, setNumbering, h] at h_fa h_fa'
+  rcases h_fa with ⟨⟨h_fs, _⟩, h_fn⟩
+  rcases h_fa' with ⟨_, h_fn'⟩
+  rw [← h_fn'] at h_fn
+  have := (InjOn.eq_iff (BijOn.injOn h_fs) h_as h_a's ).mp h_fn
+  contradiction
 
 lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     setNumbering α s = (s.biUnion (setNumberingLast α s)) := by
-  sorry
+  apply Finset.ext ; intro f
+  simp [setNumberingLast]
+  constructor
+  · intro h_fs
+
+    sorry
+  · rintro ⟨a, h_as, h_fs, _⟩
+    exact h_fs
 
 theorem set_numbering_card (s : Finset α) :
     (setNumbering α s).card = s.card.factorial := by
@@ -94,8 +100,8 @@ theorem set_numbering_card (s : Finset α) :
     have h_diff := Finset.card_sdiff (Finset.singleton_subset_iff.mpr h_mem)
     simp [h] at h_diff
     exact ih (s \ {a}) h_diff
-  simp [set_numbering_union α h, card_biUnion (subset_numbering_disjoint α h),
-        Finset.sum_congr (rfl : s = s) (subset_numbering_card α),
+  simp [set_numbering_union α h, card_biUnion (set_numbering_last_disj α h),
+        Finset.sum_congr (rfl : s = s) (set_numbering_last_card α),
         Finset.sum_congr (rfl : s = s) ih',
         Finset.sum_const n.factorial, h, Nat.factorial_succ]
 

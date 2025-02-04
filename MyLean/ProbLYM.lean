@@ -55,29 +55,29 @@ lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
 --   . intro a' h_a's h_a'a
 --     simp [appendNumbering, h_a's, h_a'a]
 
-def subsetNumbering (s : Finset α) (a : α) : Finset (PreNumbering α) :=
+def setNumberingLast (s : Finset α) (a : α) : Finset (PreNumbering α) :=
   { f ∈ setNumbering α s | f a = s.card - 1 }
 
 --  { f ∈ setNumbering α s | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
 
 lemma subset_numbering_card {s : Finset α} :
-    ∀ a ∈ s, (subsetNumbering α s a).card = (setNumbering α (s \ {a})).card := by
+    ∀ a ∈ s, (setNumberingLast α s a).card = (setNumbering α (s \ {a})).card := by
   sorry
 
 lemma subset_numbering_disjoint {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
-    ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (subsetNumbering α s a) (subsetNumbering α s a') := by
+    ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (setNumberingLast α s a) (setNumberingLast α s a') := by
   intro a h_as a' h_a's h_aa'
   apply Finset.disjoint_left.mpr
   intro f h_fa h_fa'
-  simp [subsetNumbering] at h_fa h_fa'
-  rcases h_fa with ⟨g, _, h_fg⟩
-  rcases h_fa' with ⟨g', _, h_fg'⟩
+  simp [setNumberingLast] at h_fa h_fa'
+  -- rcases h_fa with ⟨g, _, h_fg⟩
+  -- rcases h_fa' with ⟨g', _, h_fg'⟩
 
 
   sorry
 
 lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
-    setNumbering α s = (s.biUnion (subsetNumbering α s)) := by
+    setNumbering α s = (s.biUnion (setNumberingLast α s)) := by
   sorry
 
 theorem set_numbering_card (s : Finset α) :

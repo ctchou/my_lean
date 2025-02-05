@@ -42,11 +42,74 @@ lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
 def setNumberingLast (s : Finset α) (a : α) : Finset (PreNumbering α) :=
   { f ∈ setNumbering α s | f a = s.card - 1 }
 
---  { f ∈ setNumbering α s | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
-
 lemma set_numbering_last_card {s : Finset α} :
     ∀ a ∈ s, (setNumberingLast α s a).card = (setNumbering α (s \ {a})).card := by
-  sorry
+  intro a h_as
+  let φ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f a else 0
+  let ψ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f a else if b = a then s.card - 1 else 0
+  apply le_antisymm
+  · have h_cls : ∀ f ∈ (setNumberingLast α s a), φ f ∈ (setNumbering α (s \ {a})) := by
+      intro f ; simp [setNumberingLast, setNumbering]
+      intro h_bij h_ns h_fa
+      constructor
+      · sorry
+      · intro b h_b
+        rcases dec_em (b ∈ s) with h_bs | h_bs
+        · simp [φ, h_b h_bs]
+        · simp [φ, h_ns b h_bs, h_bs]
+    apply card_le_card_of_injOn φ h_cls
+    intro f h_f f' h_f' h_φ₀ ; ext b
+    have h_φ₁ := funext_iff.mp h_φ₀ b
+
+
+    sorry
+  ·
+    sorry
+
+
+  -- apply le_antisymm
+  -- · apply card_le_card_of_surjOn ψ
+  --   intro f ; simp [setNumberingLast, setNumbering]
+  --   intro h_bij h_ns h_fa
+  --   use (φ f)
+  --   constructor
+  --   · sorry
+  --   · ext b
+  --     rw [φ, ψ]
+
+
+  --     rcases dec_em (b ∈ s) with h_s | h_s <;> rcases dec_em (b = a) with h_a | h_a <;> unfold φ ψ
+  --     · simp [h_s, h_a]
+
+
+
+  --     sorry
+
+  -- · apply card_le_card_of_surjOn φ
+  --   intro f ; simp [setNumberingLast, setNumbering]
+  --   intro h_bij h_ns
+  --   use (ψ f)
+  --   constructor
+  --   · sorry
+  --   · sorry
+
+
+  -- let i (f : PreNumbering α) : PreNumbering α := fun b ↦ if b = a then 0 else if b ∈ s \ {a} then f a else 0
+  -- let j (f : PreNumbering α) : PreNumbering α := fun b ↦ if b = a then s.card - 1 else if b ∈ s \ {a} then f a else 0
+  -- let h_i : ∀ f ∈ (setNumberingLast α s a), i f ∈ (setNumbering α (s \ {a})) := by
+  --   intro f ; simp [setNumberingLast, setNumbering]
+  --   intro h_bij h_ns h_fa
+  --   constructor
+  --   · have h_bij' := BijOn.sdiff_singleton h_bij h_as
+
+  --     sorry
+  --   · intro b h_b
+  --     rcases dec_em (b ∈ s) with h_bs | h_bs
+  --     · simp [i, h_b h_bs]
+  --     · rcases dec_em (b = a) with h_ba | h_ba
+  --       · simp [i, h_ba]
+  --       · simp [i, h_bs, h_ba]
+
 
 lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (setNumberingLast α s a) (setNumberingLast α s a') := by
@@ -59,16 +122,6 @@ lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
   rw [← h_fn'] at h_fn
   have := (InjOn.eq_iff (BijOn.injOn h_fs) h_as h_a's ).mp h_fn
   contradiction
-
-example (s : Finset α) (n : ℕ) (h : s.card = n + 1) : ↑n < Fin.last (Fintype.card α) := by
-  have h1 := Finset.card_le_univ s
-  simp [h] at h1
-  have h2 : n % (Fintype.card α + 1) = n := by
-    apply Nat.mod_eq_of_lt
-    linarith
-  apply Fin.lt_def.mpr
-  simp [Fin.val_last, h2]
-  linarith
 
 lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     setNumbering α s = (s.biUnion (setNumberingLast α s)) := by
@@ -131,6 +184,8 @@ theorem set_numbering_card (s : Finset α) :
 --     sorry
 --   . intro a' h_a's h_a'a
 --     simp [appendNumbering, h_a's, h_a'a]
+
+--  { f ∈ setNumbering α s | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
 
 /-- **************************************************************************************************** -/
 

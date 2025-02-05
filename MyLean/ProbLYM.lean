@@ -29,6 +29,13 @@ abbrev PreNumbering := α → Fin (card α + 1)
 
 def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | i < n }
 
+example (s : Finset α) (a : α) (h_as : a ∈ s) (f : PreNumbering α) (h1 : BijOn f (↑s \ {a}) (↑(initSeg α #s) \ {f a})) :
+    BijOn f (↑s \ {a}) ↑(initSeg α (s.card - 1)) := by
+  have h2 : ↑(initSeg α s.card) \ {f a} = ↑(initSeg α (s.card - 1)) := by
+    sorry
+  rw [h2] at h1
+  sorry
+
 def setNumbering (s : Finset α) : Finset (PreNumbering α) :=
   { f | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
 
@@ -45,54 +52,73 @@ def setNumberingLast (s : Finset α) (a : α) : Finset (PreNumbering α) :=
 lemma set_numbering_last_card {s : Finset α} :
     ∀ a ∈ s, (setNumberingLast α s a).card = (setNumbering α (s \ {a})).card := by
   intro a h_as
-  let φ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f a else 0
-  let ψ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f a else if b = a then s.card - 1 else 0
-  apply le_antisymm
-  · have h_cls : ∀ f ∈ (setNumberingLast α s a), φ f ∈ (setNumbering α (s \ {a})) := by
-      intro f ; simp [setNumberingLast, setNumbering]
-      intro h_bij h_ns h_fa
-      constructor
-      · sorry
-      · intro b h_b
-        rcases dec_em (b ∈ s) with h_bs | h_bs
-        · simp [φ, h_b h_bs]
-        · simp [φ, h_ns b h_bs, h_bs]
-    apply card_le_card_of_injOn φ h_cls
-    intro f h_f f' h_f' h_φ₀ ; ext b
-    have h_φ₁ := funext_iff.mp h_φ₀ b
+  let φ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f b else 0
+  let ψ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f b else if b = a then s.card - 1 else 0
+
+  have h_φ : ∀ f ∈ (setNumberingLast α s a), φ f ∈ (setNumbering α (s \ {a})) := by
+    intro f ; simp [setNumberingLast, setNumbering]
+    intro h_bij h_ns h_fa
+    constructor
+    · simp [card_sdiff (singleton_subset_iff.mpr h_as)]
+      have h_bij' : BijOn f (↑s \ {a}) ↑(initSeg α (#s - 1)) := by
+        have h_bij'' := BijOn.sdiff_singleton h_bij h_as
+        have h1 : ↑(initSeg α s.card) \ {f a} = ↑(initSeg α (s.card - 1)) := by
+          sorry
+        rw [h1] at h_bij''
+/-
+α : Type u_1
+inst✝¹ : Fintype α
+inst✝ : DecidableEq α
+s : Finset α
+a : α
+h_as : a ∈ s
+φ : PreNumbering α → PreNumbering α := fun f b ↦ if b ∈ s \ {a} then f b else 0
+ψ : PreNumbering α → PreNumbering α := fun f b ↦ if b ∈ s \ {a} then f b else if b = a then ↑(#s) - 1 else 0
+f : PreNumbering α
+h_bij : BijOn f ↑s ↑(initSeg α #s)
+h_ns : ∀ a ∉ s, ↑(f a) = 0
+h_fa : f a = ↑(#s) - 1
+h_bij'' : BijOn f (↑s \ {a}) (↑(initSeg α #s) \ {f a})
+h1 : initSeg α #s \ {f a} = initSeg α (#s - 1)
+⊢ BijOn f (↑s \ {a}) ↑(initSeg α (#s - 1))
+-/
+
+        sorry
+      have h_eq : EqOn f (φ f) (↑s \ {a}) := by
+        intro b h_b
+        simp at h_b
+        simp [φ, h_b]
+      exact (EqOn.bijOn_iff h_eq).mp h_bij'
+
+      -- have h_bij' := BijOn.sdiff_singleton h_bij h_as
+      -- have : ↑(initSeg α s.card) \ {f a} = ↑(initSeg α (s.card - 1)) := by
+      --   -- simp [h_fa]
+      --   -- apply Finset.ext ; intro i
+      --   -- simp [initSeg]
+
+      --   sorry
+      -- simp [this] at h_bij'
+
+--      have : ↑(initSeg α #s) \ {f a} = ↑(initSeg α #(s \ {a}))
+
+    · intro b h_b
+      rcases dec_em (b ∈ s) with h_bs | h_bs
+      · simp [φ, h_b h_bs]
+      · simp [φ, h_ns b h_bs, h_bs]
+
+  have h_φ : ∀ f ∈ (setNumberingLast α s a), ψ (φ f) = f := by
+    intro f ; simp [setNumberingLast, setNumbering]
+    intro h_bij h_ns h_fa
+    ext b
+    rcases dec_em (b ∈ s) with h_bs | h_bs <;> rcases dec_em (b = a) with h_ba | h_ba
+    · simp [φ, ψ, h_bs, h_ba, h_fa]
+    . simp [φ, ψ, h_bs, h_ba]
+    · simp [h_ba] at h_bs ; contradiction
+    . simp [φ, ψ, h_bs, h_ba, h_ns]
 
 
-    sorry
-  ·
-    sorry
 
-
-  -- apply le_antisymm
-  -- · apply card_le_card_of_surjOn ψ
-  --   intro f ; simp [setNumberingLast, setNumbering]
-  --   intro h_bij h_ns h_fa
-  --   use (φ f)
-  --   constructor
-  --   · sorry
-  --   · ext b
-  --     rw [φ, ψ]
-
-
-  --     rcases dec_em (b ∈ s) with h_s | h_s <;> rcases dec_em (b = a) with h_a | h_a <;> unfold φ ψ
-  --     · simp [h_s, h_a]
-
-
-
-  --     sorry
-
-  -- · apply card_le_card_of_surjOn φ
-  --   intro f ; simp [setNumberingLast, setNumbering]
-  --   intro h_bij h_ns
-  --   use (ψ f)
-  --   constructor
-  --   · sorry
-  --   · sorry
-
+  sorry
 
   -- let i (f : PreNumbering α) : PreNumbering α := fun b ↦ if b = a then 0 else if b ∈ s \ {a} then f a else 0
   -- let j (f : PreNumbering α) : PreNumbering α := fun b ↦ if b = a then s.card - 1 else if b ∈ s \ {a} then f a else 0

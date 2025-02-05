@@ -29,12 +29,15 @@ abbrev PreNumbering := α → Fin (card α + 1)
 
 def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | i < n }
 
-example (s : Finset α) (a : α) (h_as : a ∈ s) (f : PreNumbering α) (h1 : BijOn f (↑s \ {a}) (↑(initSeg α #s) \ {f a})) :
-    BijOn f (↑s \ {a}) ↑(initSeg α (s.card - 1)) := by
-  have h2 : ↑(initSeg α s.card) \ {f a} = ↑(initSeg α (s.card - 1)) := by
-    sorry
-  rw [h2] at h1
-  sorry
+-- example (s : Finset α) (a : α) (h_as : a ∈ s) (f : PreNumbering α) (h1 : BijOn f (↑s \ {a}) (↑(initSeg α #s) \ {f a})) :
+--     BijOn f (↑s \ {a}) ↑(initSeg α (s.card - 1)) := by
+--   have h2 : ↑(initSeg α #s) \ {f a} = ↑(initSeg α (#s - 1)) := by
+--     sorry
+-- -- At this point we have the following, where ↑ has disappeared!
+-- -- h2 : initSeg α #s \ {f a} = initSeg α (#s - 1)
+-- -- Consequently the following rewrite fails.
+-- --  rw [h2] at h1
+--   sorry
 
 def setNumbering (s : Finset α) : Finset (PreNumbering α) :=
   { f | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }

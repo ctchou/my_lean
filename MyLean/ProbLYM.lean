@@ -68,23 +68,6 @@ lemma set_numbering_last_card {s : Finset α} :
         have h1 : ↑(initSeg α s.card) \ {f a} = ↑(initSeg α (s.card - 1)) := by
           sorry
         rw [h1] at h_bij''
-/-
-α : Type u_1
-inst✝¹ : Fintype α
-inst✝ : DecidableEq α
-s : Finset α
-a : α
-h_as : a ∈ s
-φ : PreNumbering α → PreNumbering α := fun f b ↦ if b ∈ s \ {a} then f b else 0
-ψ : PreNumbering α → PreNumbering α := fun f b ↦ if b ∈ s \ {a} then f b else if b = a then ↑(#s) - 1 else 0
-f : PreNumbering α
-h_bij : BijOn f ↑s ↑(initSeg α #s)
-h_ns : ∀ a ∉ s, ↑(f a) = 0
-h_fa : f a = ↑(#s) - 1
-h_bij'' : BijOn f (↑s \ {a}) (↑(initSeg α #s) \ {f a})
-h1 : initSeg α #s \ {f a} = initSeg α (#s - 1)
-⊢ BijOn f (↑s \ {a}) ↑(initSeg α (#s - 1))
--/
 
         sorry
       have h_eq : EqOn f (φ f) (↑s \ {a}) := by

@@ -64,29 +64,17 @@ lemma set_numbering_last_card {s : Finset α} :
     constructor
     · simp [card_sdiff (singleton_subset_iff.mpr h_as)]
       have h_bij' : BijOn f (↑s \ {a}) ↑(initSeg α (#s - 1)) := by
-        have h_bij'' := BijOn.sdiff_singleton h_bij h_as
-        have h1 : ↑(initSeg α s.card) \ {f a} = ↑(initSeg α (s.card - 1)) := by
-          sorry
-        rw [h1] at h_bij''
+        have h1 := BijOn.sdiff_singleton h_bij h_as
+        have h2 : (initSeg α #s).toSet \ {f a} = initSeg α (#s - 1) := by
 
-        sorry
+          sorry
+        rw [h2] at h1
+        assumption
       have h_eq : EqOn f (φ f) (↑s \ {a}) := by
         intro b h_b
         simp at h_b
         simp [φ, h_b]
       exact (EqOn.bijOn_iff h_eq).mp h_bij'
-
-      -- have h_bij' := BijOn.sdiff_singleton h_bij h_as
-      -- have : ↑(initSeg α s.card) \ {f a} = ↑(initSeg α (s.card - 1)) := by
-      --   -- simp [h_fa]
-      --   -- apply Finset.ext ; intro i
-      --   -- simp [initSeg]
-
-      --   sorry
-      -- simp [this] at h_bij'
-
---      have : ↑(initSeg α #s) \ {f a} = ↑(initSeg α #(s \ {a}))
-
     · intro b h_b
       rcases dec_em (b ∈ s) with h_bs | h_bs
       · simp [φ, h_b h_bs]
@@ -101,8 +89,6 @@ lemma set_numbering_last_card {s : Finset α} :
     . simp [φ, ψ, h_bs, h_ba]
     · simp [h_ba] at h_bs ; contradiction
     . simp [φ, ψ, h_bs, h_ba, h_ns]
-
-
 
   sorry
 

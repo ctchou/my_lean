@@ -27,19 +27,16 @@ variable (α : Type*) [Fintype α] [DecidableEq α]
 
 def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | (i : ℕ) < n }
 
+omit [DecidableEq α] in
 theorem init_seg_last (n : ℕ) (h0 : 0 < n) (h1 : n < card α + 1) :
     (initSeg α n).toSet \ {(n : Fin (card α + 1)) - 1} = initSeg α (n - 1) := by
   ext i
   simp [initSeg]
-  constructor
-  · sorry
-  . intro h2
-    constructor
-    · sorry
-    · intro h3
-      simp [h3] at h2
-
-      sorry
+  rw [← Nat.cast_pred h0]
+  rw [← Fin.val_eq_val]
+  rw [Fin.val_natCast]
+  rw [Nat.mod_eq_of_lt (by omega)]
+  omega
 
 abbrev PreNumbering := α → Fin (card α + 1)
 
@@ -70,11 +67,10 @@ private lemma set_numbering_last_card {s : Finset α} :
       have h_bij' : BijOn f (↑s \ {a}) ↑(initSeg α (#s - 1)) := by
         have h1 := BijOn.sdiff_singleton h_bij h_as
         have h2 : (initSeg α #s).toSet \ {f a} = initSeg α (#s - 1) := by
-          apply Set.ext ; intro i
-          simp [initSeg, h_fa]
-
-
-          sorry
+          rw [h_fa]
+          apply init_seg_last α s.card (Nonempty.card_pos (nonempty_of_mem h_as))
+          have := card_le_univ s
+          omega
         rw [h2] at h1
         assumption
       have h_eq : EqOn f (φ f) (↑s \ {a}) := by
@@ -87,9 +83,19 @@ private lemma set_numbering_last_card {s : Finset α} :
       · simp [φ, h_b h_bs]
       · simp [φ, h_ns b h_bs, h_bs]
 
-  have h_φ : ∀ f ∈ (setNumberingLast α s a), ψ (φ f) = f := by
+  have h_ψ_φ : ∀ f ∈ (setNumberingLast α s a), ψ (φ f) = f := by
     intro f ; simp [setNumberingLast, setNumbering]
     intro h_bij h_ns h_fa
+    ext b
+    rcases dec_em (b ∈ s) with h_bs | h_bs <;> rcases dec_em (b = a) with h_ba | h_ba
+    · simp [φ, ψ, h_bs, h_ba, h_fa]
+    . simp [φ, ψ, h_bs, h_ba]
+    · simp [h_ba] at h_bs ; contradiction
+    . simp [φ, ψ, h_bs, h_ba, h_ns]
+
+  have h_φ_ψ : ∀ f ∈ setNumbering α (s \ {a}), φ (ψ f) = f := by
+    intro f ; simp [setNumberingLast, setNumbering]
+    intro h_bij h_ns
     ext b
     rcases dec_em (b ∈ s) with h_bs | h_bs <;> rcases dec_em (b = a) with h_ba | h_ba
     · simp [φ, ψ, h_bs, h_ba, h_fa]
@@ -127,8 +133,8 @@ private lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1)
       simp [h] at h1
       have h2 : n % (Fintype.card α + 1) = n := by
         apply Nat.mod_eq_of_lt
-        linarith
-      linarith
+        omega
+      omega
     have h_last := h_surj h_iseg
     simp at h_last
     rcases h_last with ⟨a, h_as, h_fa⟩

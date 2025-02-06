@@ -25,9 +25,23 @@ noncomputable section
 
 variable (α : Type*) [Fintype α] [DecidableEq α]
 
-abbrev PreNumbering := α → Fin (card α + 1)
+def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | (i : ℕ) < n }
 
-def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | i < n }
+theorem init_seg_last (n : ℕ) (h0 : 0 < n) (h1 : n < card α + 1) :
+    (initSeg α n).toSet \ {(n : Fin (card α + 1)) - 1} = initSeg α (n - 1) := by
+  ext i
+  simp [initSeg]
+  constructor
+  · sorry
+  . intro h2
+    constructor
+    · sorry
+    · intro h3
+      simp [h3] at h2
+
+      sorry
+
+abbrev PreNumbering := α → Fin (card α + 1)
 
 def setNumbering (s : Finset α) : Finset (PreNumbering α) :=
   { f | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
@@ -59,6 +73,7 @@ private lemma set_numbering_last_card {s : Finset α} :
           apply Set.ext ; intro i
           simp [initSeg, h_fa]
 
+
           sorry
         rw [h2] at h1
         assumption
@@ -83,23 +98,6 @@ private lemma set_numbering_last_card {s : Finset α} :
     . simp [φ, ψ, h_bs, h_ba, h_ns]
 
   sorry
-
-  -- let i (f : PreNumbering α) : PreNumbering α := fun b ↦ if b = a then 0 else if b ∈ s \ {a} then f a else 0
-  -- let j (f : PreNumbering α) : PreNumbering α := fun b ↦ if b = a then s.card - 1 else if b ∈ s \ {a} then f a else 0
-  -- let h_i : ∀ f ∈ (setNumberingLast α s a), i f ∈ (setNumbering α (s \ {a})) := by
-  --   intro f ; simp [setNumberingLast, setNumbering]
-  --   intro h_bij h_ns h_fa
-  --   constructor
-  --   · have h_bij' := BijOn.sdiff_singleton h_bij h_as
-
-  --     sorry
-  --   · intro b h_b
-  --     rcases dec_em (b ∈ s) with h_bs | h_bs
-  --     · simp [i, h_b h_bs]
-  --     · rcases dec_em (b = a) with h_ba | h_ba
-  --       · simp [i, h_ba]
-  --       · simp [i, h_bs, h_ba]
-
 
 private lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (setNumberingLast α s a) (setNumberingLast α s a') := by
@@ -130,8 +128,6 @@ private lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1)
       have h2 : n % (Fintype.card α + 1) = n := by
         apply Nat.mod_eq_of_lt
         linarith
-      apply Fin.lt_def.mpr
-      simp [Fin.val_last, h2]
       linarith
     have h_last := h_surj h_iseg
     simp at h_last

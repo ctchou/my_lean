@@ -83,6 +83,18 @@ private lemma set_numbering_last_card {s : Finset α} :
       · simp [φ, h_b h_bs]
       · simp [φ, h_ns b h_bs, h_bs]
 
+  have h_ψ : ∀ f ∈ (setNumbering α (s \ {a})), ψ f ∈ (setNumberingLast α s a) := by
+    intro f ; simp [setNumberingLast, setNumbering]
+    intro h_bij h_ns
+    constructor
+    · constructor
+      · sorry
+      · intro b h_bs
+        rcases dec_em (b = a) with h_ba | h_ba
+        · simp [h_ba] at h_bs ; contradiction
+        · simp [ψ, h_bs, h_ba]
+    · simp [ψ]
+
   have h_ψ_φ : ∀ f ∈ (setNumberingLast α s a), ψ (φ f) = f := by
     intro f ; simp [setNumberingLast, setNumbering]
     intro h_bij h_ns h_fa
@@ -98,7 +110,9 @@ private lemma set_numbering_last_card {s : Finset α} :
     intro h_bij h_ns
     ext b
     rcases dec_em (b ∈ s) with h_bs | h_bs <;> rcases dec_em (b = a) with h_ba | h_ba
-    · simp [φ, ψ, h_bs, h_ba, h_fa]
+    · have h_ns := h_ns b
+      simp [h_ba] at h_ns
+      simp [φ, ψ, h_bs, h_ba, h_ns]
     . simp [φ, ψ, h_bs, h_ba]
     · simp [h_ba] at h_bs ; contradiction
     . simp [φ, ψ, h_bs, h_ba, h_ns]

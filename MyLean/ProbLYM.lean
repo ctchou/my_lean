@@ -42,17 +42,17 @@ def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | i < n }
 def setNumbering (s : Finset α) : Finset (PreNumbering α) :=
   { f | BijOn f s (initSeg α s.card) ∧ ∀ a ∈ sᶜ, (f a : ℕ) = 0 }
 
-lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
+private lemma set_numbering_empty : setNumbering α ∅ = {fun _ ↦ 0} := by
   apply Finset.ext ; intro f
   simp [setNumbering, initSeg]
   constructor <;> intro h
   · ext a ; simp [h]
   · intro a ; simp [h]
 
-def setNumberingLast (s : Finset α) (a : α) : Finset (PreNumbering α) :=
+private def setNumberingLast (s : Finset α) (a : α) : Finset (PreNumbering α) :=
   { f ∈ setNumbering α s | f a = s.card - 1 }
 
-lemma set_numbering_last_card {s : Finset α} :
+private lemma set_numbering_last_card {s : Finset α} :
     ∀ a ∈ s, (setNumberingLast α s a).card = (setNumbering α (s \ {a})).card := by
   intro a h_as
   let φ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f b else 0
@@ -66,6 +66,8 @@ lemma set_numbering_last_card {s : Finset α} :
       have h_bij' : BijOn f (↑s \ {a}) ↑(initSeg α (#s - 1)) := by
         have h1 := BijOn.sdiff_singleton h_bij h_as
         have h2 : (initSeg α #s).toSet \ {f a} = initSeg α (#s - 1) := by
+          apply Set.ext ; intro i
+          simp [initSeg, h_fa]
 
           sorry
         rw [h2] at h1
@@ -109,7 +111,7 @@ lemma set_numbering_last_card {s : Finset α} :
   --       · simp [i, h_bs, h_ba]
 
 
-lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
+private lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (setNumberingLast α s a) (setNumberingLast α s a') := by
   intro a h_as a' h_a's h_aa'
   apply Finset.disjoint_left.mpr
@@ -121,7 +123,7 @@ lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
   have := (InjOn.eq_iff (BijOn.injOn h_fs) h_as h_a's ).mp h_fn
   contradiction
 
-lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
+private lemma set_numbering_union {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     setNumbering α s = (s.biUnion (setNumberingLast α s)) := by
   apply Finset.ext ; intro f
   simp [setNumberingLast]

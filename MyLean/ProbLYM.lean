@@ -21,21 +21,38 @@ open BigOperators Fintype Finset Set MeasureTheory ProbabilityTheory
 open MeasureTheory.Measure
 open scoped ENNReal
 
-noncomputable section
+section
 
 variable (α : Type*) [Fintype α] [DecidableEq α]
 
 def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | (i : ℕ) < n }
 
 omit [DecidableEq α] in
-theorem init_seg_last (n : ℕ) (h0 : 0 < n) (h1 : n < card α + 1) :
+theorem init_seg_del_last {n : ℕ} (h0 : 0 < n) (h1 : n < card α + 1) :
     (initSeg α n).toSet \ {(n : Fin (card α + 1)) - 1} = initSeg α (n - 1) := by
   ext i
-  simp [initSeg]
-  rw [← Nat.cast_pred h0]
-  rw [← Fin.val_eq_val]
-  rw [Fin.val_natCast]
-  rw [Nat.mod_eq_of_lt (by omega)]
+  simp [initSeg,
+        ← Nat.cast_pred h0,
+        ← Fin.val_eq_val,
+        Nat.mod_eq_of_lt (by omega : n - 1 < card α + 1)]
+  omega
+
+omit [DecidableEq α] in
+theorem init_seg_no_last {n : ℕ} (h0 : 0 < n) (h1 : n < card α + 1) :
+    ((n : Fin (card α + 1)) - 1) ∉ (initSeg α (n - 1)) := by
+  simp [initSeg,
+        Nat.mod_eq_of_lt h1,
+        ← Nat.cast_pred h0,
+        Nat.mod_eq_of_lt (by omega : n - 1 < card α + 1)]
+
+omit [DecidableEq α] in
+theorem init_seg_add_last {n : ℕ} (h0 : 0 < n) (h1 : n < card α + 1) :
+    (initSeg α n).toSet = insert ((n : Fin (card α + 1)) - 1) (initSeg α (n - 1)).toSet := by
+  ext i
+  simp [initSeg,
+        ← Nat.cast_pred h0,
+        ← Fin.val_eq_val,
+        Nat.mod_eq_of_lt (by omega : n - 1 < card α + 1)]
   omega
 
 abbrev PreNumbering := α → Fin (card α + 1)
@@ -58,19 +75,20 @@ private lemma set_numbering_last_card {s : Finset α} :
   intro a h_as
   let φ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f b else 0
   let ψ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f b else if b = a then s.card - 1 else 0
+  have h_s_lb : 0 < s.card := Nonempty.card_pos (nonempty_of_mem h_as)
+  have h_s_ub : s.card < card α + 1 := by have := card_le_univ s ; omega
+  have h_s_del : (s \ {a}).card = s.card - 1 := card_sdiff (Finset.singleton_subset_iff.mpr h_as)
 
   have h_φ : ∀ f ∈ (setNumberingLast α s a), φ f ∈ (setNumbering α (s \ {a})) := by
     intro f ; simp [setNumberingLast, setNumbering]
     intro h_bij h_ns h_fa
     constructor
-    · simp [card_sdiff (singleton_subset_iff.mpr h_as)]
+    · rw [h_s_del]
       have h_bij' : BijOn f (↑s \ {a}) ↑(initSeg α (#s - 1)) := by
         have h1 := BijOn.sdiff_singleton h_bij h_as
-        have h2 : (initSeg α #s).toSet \ {f a} = initSeg α (#s - 1) := by
+        have h2 : (initSeg α #s).toSet \ {f a} = initSeg α (s.card - 1) := by
           rw [h_fa]
-          apply init_seg_last α s.card (Nonempty.card_pos (nonempty_of_mem h_as))
-          have := card_le_univ s
-          omega
+          exact init_seg_del_last α h_s_lb h_s_ub
         rw [h2] at h1
         assumption
       have h_eq : EqOn f (φ f) (↑s \ {a}) := by
@@ -88,12 +106,25 @@ private lemma set_numbering_last_card {s : Finset α} :
     intro h_bij h_ns
     constructor
     · constructor
-      · sorry
+      · have h1 : s.toSet = insert a (s.toSet \ {a}) := by
+          simp [insert_diff_singleton, Set.insert_eq_of_mem (mem_coe.mpr h_as)]
+        have h2 : (initSeg α #s).toSet = insert (ψ f a) ↑(initSeg α #(s \ {a})) := by
+          simp [ψ, h_s_del]
+          exact init_seg_add_last α h_s_lb h_s_ub
+        rw [h1, h2]
+        apply BijOn.insert
+        · have h_eq : EqOn f (ψ f) (↑s \ {a}) := by
+            intro b h_b
+            simp at h_b
+            simp [ψ, h_b]
+          exact (EqOn.bijOn_iff h_eq).mp h_bij
+        · simp [ψ, h_s_del]
+          exact init_seg_no_last α h_s_lb h_s_ub
       · intro b h_bs
         rcases dec_em (b = a) with h_ba | h_ba
         · simp [h_ba] at h_bs ; contradiction
         · simp [ψ, h_bs, h_ba]
-    · simp [ψ]
+    . simp [ψ]
 
   have h_ψ_φ : ∀ f ∈ (setNumberingLast α s a), ψ (φ f) = f := by
     intro f ; simp [setNumberingLast, setNumbering]
@@ -117,7 +148,7 @@ private lemma set_numbering_last_card {s : Finset α} :
     · simp [h_ba] at h_bs ; contradiction
     . simp [φ, ψ, h_bs, h_ba, h_ns]
 
-  sorry
+  exact card_nbij' φ ψ h_φ h_ψ h_ψ_φ h_φ_ψ
 
 private lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
     ∀ a ∈ s, ∀ a' ∈ s, a ≠ a' → Disjoint (setNumberingLast α s a) (setNumberingLast α s a') := by
@@ -168,30 +199,13 @@ theorem set_numbering_card (s : Finset α) :
     exact set_numbering_empty α
   have ih' : ∀ a ∈ s, (setNumbering α (s \ {a})).card = n.factorial := by
     intro a h_mem
-    have h_diff := Finset.card_sdiff (Finset.singleton_subset_iff.mpr h_mem)
+    have h_diff := card_sdiff (Finset.singleton_subset_iff.mpr h_mem)
     simp [h] at h_diff
     exact ih (s \ {a}) h_diff
   simp [set_numbering_union α h, card_biUnion (set_numbering_last_disj α h),
         Finset.sum_congr (rfl : s = s) (set_numbering_last_card α),
         Finset.sum_congr (rfl : s = s) ih',
         Finset.sum_const n.factorial, h, Nat.factorial_succ]
-
--- def appendNumbering (f : PreNumbering α) (s : Finset α) (a : α) : PreNumbering α :=
---   fun a' ↦ if a' ∈ s then f a' else
---            if a' = a then s.card else 0
-
--- lemma append_numbering_closure {f : PreNumbering α} {s : Finset α} {a : α}
---     (hf : f ∈ setNumbering α s) (ha : ¬ a ∈ s) : appendNumbering α f s a ∈ setNumbering α (s ∪ {a}) := by
---   simp [setNumbering]
---   constructor
---   · have : initSeg α (s ∪ {a}) = insert s.card (initSeg α s) := by
---       sorry
-
---     sorry
---   . intro a' h_a's h_a'a
---     simp [appendNumbering, h_a's, h_a'a]
-
---  { f ∈ setNumbering α s | ∃ f' ∈ setNumbering α (s \ {a}), f = appendNumbering α f' (s \ {a}) a }
 
 /-- **************************************************************************************************** -/
 

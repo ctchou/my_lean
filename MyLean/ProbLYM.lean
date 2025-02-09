@@ -23,11 +23,13 @@ open scoped ENNReal
 
 section
 
-variable (α : Type*) [Fintype α] [DecidableEq α]
+variable (α : Type*) [Fintype α]
 
 def initSeg (n : ℕ) : Finset (Fin (card α + 1)) := { i | (i : ℕ) < n }
 
-omit [DecidableEq α] in
+theorem init_seg_subset {n1 n2 : ℕ} (h : n1 ≤ n2) : (initSeg α n1) ⊆ (initSeg α n2) := by
+  intro i ; simp [initSeg] ; omega
+
 theorem init_seg_del_last {n : ℕ} (h0 : 0 < n) (h1 : n < card α + 1) :
     (initSeg α n).toSet \ {(n : Fin (card α + 1)) - 1} = initSeg α (n - 1) := by
   ext i
@@ -37,7 +39,6 @@ theorem init_seg_del_last {n : ℕ} (h0 : 0 < n) (h1 : n < card α + 1) :
         Nat.mod_eq_of_lt (by omega : n - 1 < card α + 1)]
   omega
 
-omit [DecidableEq α] in
 theorem init_seg_no_last {n : ℕ} (h0 : 0 < n) (h1 : n < card α + 1) :
     ((n : Fin (card α + 1)) - 1) ∉ (initSeg α (n - 1)) := by
   simp [initSeg,
@@ -45,7 +46,6 @@ theorem init_seg_no_last {n : ℕ} (h0 : 0 < n) (h1 : n < card α + 1) :
         ← Nat.cast_pred h0,
         Nat.mod_eq_of_lt (by omega : n - 1 < card α + 1)]
 
-omit [DecidableEq α] in
 theorem init_seg_add_last {n : ℕ} (h0 : 0 < n) (h1 : n < card α + 1) :
     (initSeg α n).toSet = insert ((n : Fin (card α + 1)) - 1) (initSeg α (n - 1)).toSet := by
   ext i
@@ -54,6 +54,8 @@ theorem init_seg_add_last {n : ℕ} (h0 : 0 < n) (h1 : n < card α + 1) :
         ← Fin.val_eq_val,
         Nat.mod_eq_of_lt (by omega : n - 1 < card α + 1)]
   omega
+
+variable [DecidableEq α]
 
 abbrev PreNumbering := α → Fin (card α + 1)
 
@@ -206,6 +208,23 @@ theorem set_numbering_card (s : Finset α) :
         Finset.sum_congr (rfl : s = s) (set_numbering_last_card α),
         Finset.sum_congr (rfl : s = s) ih',
         Finset.sum_const n.factorial, h, Nat.factorial_succ]
+
+def setNumberingPrefix (s t : Finset α) : Finset (PreNumbering α) :=
+  { f ∈ setNumbering α s | BijOn f t (initSeg α t.card) }
+
+theorem set_numbering_prefix_subset {s t1 t2 : Finset α} {f : PreNumbering α}
+    (h_t1 : t1 ⊆ s) (h_t2 : t2 ⊆ s) (h_f1 : f ∈ setNumberingPrefix α s t1) (h_f2 : f ∈ setNumberingPrefix α s t2)
+    (h_card : t1.card ≤ t2.card) : t1 ⊆ t2 := by
+  intro a h_at1
+  simp [setNumberingPrefix, setNumbering] at h_f1 h_f2
+  have h_fa2 := h_f2.2.2.2 (init_seg_subset α h_card (h_f1.2.1 h_at1))
+  rcases h_f2.2.2.2 (init_seg_subset α h_card (h_f1.2.1 h_at1)) with ⟨b, h_bt2, h_fba⟩
+  have h_ba := h_f1.1.1.2.1 (h_t2 h_bt2) (h_t1 h_at1) h_fba
+  simp [← h_ba] ; assumption
+
+theorem set_numbering_prefix_card {s t : Finset α} (h : t ⊆ s) :
+    (setNumberingPrefix α s t).card = t.card.factorial * (s.card - t.card).factorial := by
+  sorry
 
 /-- **************************************************************************************************** -/
 

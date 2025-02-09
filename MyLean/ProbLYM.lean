@@ -27,9 +27,25 @@ section
 def Numbering (α : Type*) [Fintype α] := α ≃ Fin (card α)
 
 @[reducible]
-def NumberingOn (s : Finset α) := {x // x ∈ s} ≃ Fin s.card
+def NumberingOn {α : Type*} (s : Finset α) := {x // x ∈ s} ≃ Fin s.card
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
+
+--instance : Fintype (Numbering α) := Equiv.instFintype
+
+theorem numbering_card : card (Numbering α) = (card α).factorial := by
+  exact Fintype.card_equiv (Fintype.equivFinOfCardEq rfl)
+
+theorem numbering_on_equiv (s : Finset α) : (NumberingOn s) ≃ (Fin s.card) := by
+  sorry
+
+theorem numbering_on_card (s : Finset α) : card (NumberingOn s) = s.card.factorial := by
+  have h1 : card {x // x ∈ s} = card (Fin s.card) := by simp
+
+  have h2 := Fintype.equivFinOfCardEq h1
+  have h3 := Fintype.card_equiv h2
+  simp only [NumberingOn]
+  rw [h3]
 
 def IsPrefix (s : Finset α) (f : Numbering α) :=
   ∀ x, x ∈ s ↔ f x < s.card

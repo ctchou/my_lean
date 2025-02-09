@@ -75,12 +75,12 @@ private def setNumberingLast (s : Finset α) (a : α) : Finset (PreNumbering α)
 private lemma set_numbering_last_card {s : Finset α} :
     ∀ a ∈ s, (setNumberingLast α s a).card = (setNumbering α (s \ {a})).card := by
   intro a h_as
-  let φ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f b else 0
-  let ψ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f b else if b = a then s.card - 1 else 0
   have h_s_lb : 0 < s.card := Nonempty.card_pos (nonempty_of_mem h_as)
   have h_s_ub : s.card < card α + 1 := by have := card_le_univ s ; omega
   have h_s_del : (s \ {a}).card = s.card - 1 := card_sdiff (Finset.singleton_subset_iff.mpr h_as)
 
+  let φ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f b else 0
+  let ψ (f : PreNumbering α) : PreNumbering α := fun b ↦ if b ∈ s \ {a} then f b else if b = a then s.card - 1 else 0
   have h_φ : ∀ f ∈ (setNumberingLast α s a), φ f ∈ (setNumbering α (s \ {a})) := by
     intro f ; simp [setNumberingLast, setNumbering]
     intro h_bij h_ns h_fa
@@ -146,6 +146,7 @@ private lemma set_numbering_last_card {s : Finset α} :
     . simp [φ, ψ, h_bs, h_ba]
     · simp [h_ba] at h_bs ; contradiction
     . simp [φ, ψ, h_bs, h_ba, h_ns]
+
   exact card_nbij' φ ψ h_φ h_ψ h_ψ_φ h_φ_ψ
 
 private lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
@@ -221,6 +222,11 @@ theorem set_numbering_prefix_subset {s t1 t2 : Finset α} {f : PreNumbering α}
 theorem set_numbering_prefix_card {s t : Finset α} (h_ts : t ⊆ s) :
     (setNumberingPrefix α s t).card = t.card.factorial * (s.card - t.card).factorial := by
   have h_equiv : (setNumberingPrefix α s t).card = ((setNumbering α t) ×ˢ (setNumbering α (s \ t))).card := by
+    let φ (f : PreNumbering α) : (PreNumbering α) × (PreNumbering α) := (f, f)
+
+    have h_φ : ∀ f ∈ (setNumberingPrefix α s t), φ f ∈ ((setNumbering α t) ×ˢ (setNumbering α (s \ t))) := by
+      sorry
+
     sorry
   have h_prod := Finset.card_product (setNumbering α t) (setNumbering α (s \ t))
   rw [h_equiv, h_prod, set_numbering_card α t, set_numbering_card α (s \ t), card_sdiff h_ts]

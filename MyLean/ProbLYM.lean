@@ -102,7 +102,6 @@ private lemma set_numbering_last_card {s : Finset α} :
       rcases dec_em (b ∈ s) with h_bs | h_bs
       · simp [φ, h_b h_bs]
       · simp [φ, h_ns b h_bs, h_bs]
-
   have h_ψ : ∀ f ∈ (setNumbering α (s \ {a})), ψ f ∈ (setNumberingLast α s a) := by
     intro f ; simp [setNumberingLast, setNumbering]
     intro h_bij h_ns
@@ -127,7 +126,6 @@ private lemma set_numbering_last_card {s : Finset α} :
         · simp [h_ba] at h_bs ; contradiction
         · simp [ψ, h_bs, h_ba]
     . simp [ψ]
-
   have h_ψ_φ : ∀ f ∈ (setNumberingLast α s a), ψ (φ f) = f := by
     intro f ; simp [setNumberingLast, setNumbering]
     intro h_bij h_ns h_fa
@@ -137,7 +135,6 @@ private lemma set_numbering_last_card {s : Finset α} :
     . simp [φ, ψ, h_bs, h_ba]
     · simp [h_ba] at h_bs ; contradiction
     . simp [φ, ψ, h_bs, h_ba, h_ns]
-
   have h_φ_ψ : ∀ f ∈ setNumbering α (s \ {a}), φ (ψ f) = f := by
     intro f ; simp [setNumberingLast, setNumbering]
     intro h_bij h_ns
@@ -149,7 +146,6 @@ private lemma set_numbering_last_card {s : Finset α} :
     . simp [φ, ψ, h_bs, h_ba]
     · simp [h_ba] at h_bs ; contradiction
     . simp [φ, ψ, h_bs, h_ba, h_ns]
-
   exact card_nbij' φ ψ h_φ h_ψ h_ψ_φ h_φ_ψ
 
 private lemma set_numbering_last_disj {s : Finset α} {n : ℕ} (h : s.card = n + 1) :
@@ -222,9 +218,12 @@ theorem set_numbering_prefix_subset {s t1 t2 : Finset α} {f : PreNumbering α}
   have h_ba := h_f1.1.1.2.1 (h_t2 h_bt2) (h_t1 h_at1) h_fba
   simp [← h_ba] ; assumption
 
-theorem set_numbering_prefix_card {s t : Finset α} (h : t ⊆ s) :
+theorem set_numbering_prefix_card {s t : Finset α} (h_ts : t ⊆ s) :
     (setNumberingPrefix α s t).card = t.card.factorial * (s.card - t.card).factorial := by
-  sorry
+  have h_equiv : (setNumberingPrefix α s t).card = ((setNumbering α t) ×ˢ (setNumbering α (s \ t))).card := by
+    sorry
+  have h_prod := Finset.card_product (setNumbering α t) (setNumbering α (s \ t))
+  rw [h_equiv, h_prod, set_numbering_card α t, set_numbering_card α (s \ t), card_sdiff h_ts]
 
 /-- **************************************************************************************************** -/
 

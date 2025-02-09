@@ -36,16 +36,11 @@ variable {α : Type*} [Fintype α] [DecidableEq α]
 theorem numbering_card : card (Numbering α) = (card α).factorial := by
   exact Fintype.card_equiv (Fintype.equivFinOfCardEq rfl)
 
-theorem numbering_on_equiv (s : Finset α) : (NumberingOn s) ≃ (Fin s.card) := by
-  sorry
-
 theorem numbering_on_card (s : Finset α) : card (NumberingOn s) = s.card.factorial := by
   have h1 : card {x // x ∈ s} = card (Fin s.card) := by simp
-
-  have h2 := Fintype.equivFinOfCardEq h1
-  have h3 := Fintype.card_equiv h2
+  have h2 : {x // x ∈ s} ≃ (Fin s.card) := by exact Fintype.equivOfCardEq h1
   simp only [NumberingOn]
-  rw [h3]
+  rw [Fintype.card_equiv h2]
 
 def IsPrefix (s : Finset α) (f : Numbering α) :=
   ∀ x, x ∈ s ↔ f x < s.card

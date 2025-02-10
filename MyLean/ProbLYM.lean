@@ -21,7 +21,7 @@ open BigOperators Fintype Finset Set MeasureTheory ProbabilityTheory
 open MeasureTheory.Measure
 open scoped ENNReal
 
-section
+noncomputable section
 
 @[reducible]
 def Numbering (α : Type*) [Fintype α] := α ≃ Fin (card α)
@@ -31,21 +31,26 @@ def NumberingOn {α : Type*} (s : Finset α) := {x // x ∈ s} ≃ Fin s.card
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
---instance : Fintype (Numbering α) := Equiv.instFintype
-
 theorem numbering_card : card (Numbering α) = (card α).factorial := by
   exact Fintype.card_equiv (Fintype.equivFinOfCardEq rfl)
 
+omit [Fintype α] in
 theorem numbering_on_card (s : Finset α) : card (NumberingOn s) = s.card.factorial := by
+  simp only [NumberingOn]
   have h1 : card {x // x ∈ s} = card (Fin s.card) := by simp
   have h2 : {x // x ∈ s} ≃ (Fin s.card) := by exact Fintype.equivOfCardEq h1
-  simp only [NumberingOn]
-  rw [Fintype.card_equiv h2]
+  simp [Fintype.card_equiv h2]
 
 def IsPrefix (s : Finset α) (f : Numbering α) :=
   ∀ x, x ∈ s ↔ f x < s.card
 
-def is_prefix_equiv {s : Finset α} : {f // IsPrefix s f} ≃ NumberingOn s × NumberingOn sᶜ where
+omit [DecidableEq α] in
+theorem is_prefix_subset {s1 s2 : Finset α} {f : Numbering α} (h_s1 : IsPrefix s1 f) (h_s2 : IsPrefix s2 f)
+    (h_card : s1.card ≤ s2.card) : s1 ⊆ s2 := by
+  intro a h_as1
+  exact (h_s2 a).mpr (lt_of_lt_of_le ((h_s1 a).mp h_as1) h_card)
+
+def is_prefix_equiv (s : Finset α) : {f // IsPrefix s f} ≃ NumberingOn s × NumberingOn sᶜ where
   toFun := fun ⟨f, hf⟩ ↦
     ({
       toFun := fun ⟨x, hx⟩ ↦ ⟨f x, by rwa [← hf x]⟩
@@ -117,11 +122,17 @@ def is_prefix_equiv {s : Finset α} : {f // IsPrefix s f} ≃ NumberingOn s × N
       rw [Finset.mem_compl] at hx
       simp [hx]
 
-theorem is_prefix_card {s : Finset α} {f : Numbering α} {hf : IsPrefix s f} :
-    card (NumberingOn s × NumberingOn sᶜ) = s.card.factorial * (card α - s.card).factorial := by
-  have (hn, hn') := is_prefix_equiv ⟨f, hf⟩
-  simp only [NumberingOn, Fintype.card_prod]
-  rw [Fintype.card_equiv hn, Fintype.card_equiv hn']
-  simp
+instance (s : Finset α) :
+    DecidablePred fun f ↦ (IsPrefix s f) := by
+  intro f ; exact Classical.propDecidable ((fun f ↦ IsPrefix s f) f)
+
+def SetPrefix (s : Finset α) : Finset (Numbering α) :=
+  {f | IsPrefix s f}
+
+theorem set_prefix_card {s : Finset α} :
+    (SetPrefix s).card = s.card.factorial * (card α - s.card).factorial := by
+  have h_eq:= Fintype.card_congr (is_prefix_equiv s)
+  rw [Fintype.card_subtype] at h_eq
+  rw [SetPrefix, h_eq, Fintype.card_prod, numbering_on_card s, numbering_on_card sᶜ, card_compl]
 
 end

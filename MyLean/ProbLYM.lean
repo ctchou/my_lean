@@ -129,10 +129,50 @@ instance (s : Finset α) :
 def SetPrefix (s : Finset α) : Finset (Numbering α) :=
   {f | IsPrefix s f}
 
-theorem set_prefix_card {s : Finset α} :
+theorem set_prefix_card (s : Finset α) :
     (SetPrefix s).card = s.card.factorial * (card α - s.card).factorial := by
   have h_eq:= Fintype.card_congr (is_prefix_equiv s)
   rw [Fintype.card_subtype] at h_eq
   rw [SetPrefix, h_eq, Fintype.card_prod, numbering_on_card s, numbering_on_card sᶜ, card_compl]
+
+instance : MeasurableSpace (Numbering α) := ⊤
+
+lemma set_prefix_count (s : Finset α) :
+    count (SetPrefix s).toSet = ↑(s.card.factorial * (card α - s.card).factorial) := by
+  rw [← set_prefix_card s, count_apply_finset]
+
+lemma aux_1 {k m n : ℕ} (hn : 0 < n) (heq : k * m = n) :
+    (↑ m : ENNReal) / (↑ n : ENNReal) = 1 / (↑ k : ENNReal) := by
+  -- The following proof is due to Aaron Liu.
+  subst heq
+  have hm : m ≠ 0 := by rintro rfl ; simp at hn
+  have hk : k ≠ 0 := by rintro rfl ; simp at hn
+  refine (ENNReal.toReal_eq_toReal ?_ ?_).mp ?_
+  · intro h
+    apply_fun ENNReal.toReal at h
+    simp [hm, hk] at h
+  · intro h
+    apply_fun ENNReal.toReal at h
+    simp [hk] at h
+  · field_simp
+    ring
+
+theorem set_prefix_prob (s : Finset α) :
+    uniformOn Set.univ (SetPrefix s).toSet = 1 / (card α).choose s.card := by
+  rw [uniformOn_univ, set_prefix_count s, numbering_card]
+  apply aux_1 (Nat.factorial_pos (card α))
+  rw [← mul_assoc]
+  exact Nat.choose_mul_factorial_mul_factorial (Finset.card_le_univ s)
+
+theorem set_prefix_disj {s t : Finset α} (h_st : ¬ s ⊆ t) (h_ts : ¬ t ⊆ s) :
+    Disjoint (SetPrefix s).toSet (SetPrefix t).toSet := by
+  refine Set.disjoint_iff.mpr ?_
+  intro p
+  simp only [mem_inter_iff, Finset.mem_coe, mem_empty_iff_false, imp_false, not_and]
+  simp [SetPrefix]
+  intro h_s h_t
+  rcases Nat.le_total s.card t.card with h_st' | h_ts'
+  · exact h_st (is_prefix_subset h_s h_t h_st')
+  · exact h_ts (is_prefix_subset h_t h_s h_ts')
 
 end

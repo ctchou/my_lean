@@ -4,24 +4,35 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Ching-Tsun Chou and Chris Wong
 -/
 
-import Mathlib.Data.Fin.Basic
 import Mathlib.Data.Fintype.Perm
-import Mathlib.Algebra.BigOperators.Ring
-import Mathlib.Algebra.Field.Rat
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Algebra.Order.Field.Rat
 import Mathlib.Probability.UniformOn
-
---set_option linter.unusedSectionVars false
 
 --set_option diagnostics true
 --set_option diagnostics.threshold 10
+
+/-!
+# Proof of the LYM inequality using probability theory
+
+This file contains a formalization of the proof of the LYM inequality using
+(very elementary) probability theory given in Section 1.2 of Prof. Yufei Zhao's
+lecture notes for MIT 18.226:
+
+<https://yufeizhao.com/pm/probmethod_notes.pdf>
+
+A video of Prof. Zhao's lecture on this proof is available on YouTube:
+
+<https://youtu.be/exBXHYl4po8?si=aW8hhJ6zBrvWT1T0>
+-/
 
 open BigOperators Fintype Finset Set MeasureTheory ProbabilityTheory
 open MeasureTheory.Measure
 open scoped ENNReal
 
 noncomputable section
+
+/-- A numbering is a bijective map from a finite type or set to a Fin type
+of the same cardinality.  We cannot use the existing notion of permutations
+in mathlib because we need the special property `set_prefix_subset` below. -/
 
 @[reducible]
 def Numbering (α : Type*) [Fintype α] := α ≃ Fin (card α)
@@ -41,6 +52,7 @@ theorem numbering_on_card (s : Finset α) : card (NumberingOn s) = s.card.factor
   have h2 : {x // x ∈ s} ≃ (Fin s.card) := by exact Fintype.equivOfCardEq h1
   simp [Fintype.card_equiv h2]
 
+/-- `IsPrefix s f` means that the elements of `s` precede the elements of `sᶜ` in the numbering `f`. -/
 def IsPrefix (s : Finset α) (f : Numbering α) :=
   ∀ x, x ∈ s ↔ f x < s.card
 
@@ -156,12 +168,6 @@ instance : MeasurableSpace (Numbering α) := ⊤
 theorem set_prefix_count (s : Finset α) :
     count (SetPrefix s).toSet = ↑(s.card.factorial * (card α - s.card).factorial) := by
   rw [← set_prefix_card s, count_apply_finset]
-
--- instance : IsProbabilityMeasure (uniformOn (Set.univ : Set (Numbering α))) := by
---   have h_fin : (Set.univ : Set (Numbering α)).Finite := finite_univ
---   apply uniformOn_isProbabilityMeasure h_fin
---   simp [← encard_pos, encard_eq_coe_toFinset_card (Set.univ : Set (Numbering α)),
---         numbering_card, Nat.factorial_pos (card α)]
 
 theorem set_prefix_prob (s : Finset α) :
     uniformOn Set.univ (SetPrefix s).toSet = 1 / (card α).choose s.card := by

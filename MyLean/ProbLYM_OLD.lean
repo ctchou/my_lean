@@ -6,7 +6,7 @@ Authors: Ching-Tsun Chou
 
 import Mathlib.Data.Fin.Basic
 import Mathlib.Data.Fintype.Perm
-import Mathlib.Algebra.BigOperators.Ring
+--import Mathlib.Algebra.BigOperators.Ring
 import Mathlib.Algebra.Field.Rat
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Algebra.Order.Field.Rat
@@ -296,7 +296,7 @@ theorem set_prefix_disj {s t : Finset α} (h_st : ¬ s ⊆ t) (h_ts : ¬ t ⊆ s
 variable (𝓐 : Finset (Finset α))
 
 theorem LYM_inequality (h𝓐 : IsAntichain (· ⊆ ·) (𝓐 : Set (Finset α))) :
-    ∑ s in 𝓐, ((1 : ℝ) / (card α).choose s.card) ≤ 1 := by
+    ∑ s ∈ 𝓐, ((1 : ℝ) / (card α).choose s.card) ≤ 1 := by
   sorry
 
 end

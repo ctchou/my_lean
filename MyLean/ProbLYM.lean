@@ -157,11 +157,11 @@ theorem set_prefix_count (s : Finset α) :
     count (SetPrefix s).toSet = ↑(s.card.factorial * (card α - s.card).factorial) := by
   rw [← set_prefix_card s, count_apply_finset]
 
-#check (uniformOn (Set.univ : Set (Numbering α)))
-#check IsProbabilityMeasure (uniformOn (Set.univ : Set (Numbering α)))
-
-theorem uniform_numbering_prob_measure : IsProbabilityMeasure (uniformOn (Set.univ : Set (Numbering α))) := by
-  sorry
+-- instance : IsProbabilityMeasure (uniformOn (Set.univ : Set (Numbering α))) := by
+--   have h_fin : (Set.univ : Set (Numbering α)).Finite := finite_univ
+--   apply uniformOn_isProbabilityMeasure h_fin
+--   simp [← encard_pos, encard_eq_coe_toFinset_card (Set.univ : Set (Numbering α)),
+--         numbering_card, Nat.factorial_pos (card α)]
 
 theorem set_prefix_prob (s : Finset α) :
     uniformOn Set.univ (SetPrefix s).toSet = 1 / (card α).choose s.card := by
@@ -183,9 +183,8 @@ theorem set_prefix_disj {s t : Finset α} (h_st : ¬ s ⊆ t) (h_ts : ¬ t ⊆ s
 
 variable {𝓐 : Finset (Finset α)}
 
-theorem antichain_prob (h𝓐 : IsAntichain (· ⊆ ·) 𝓐.toSet) :
-    uniformOn Set.univ ( ⋃ s ∈ 𝓐, (SetPrefix s).toSet) = ∑ s ∈ 𝓐, uniformOn Set.univ (SetPrefix s).toSet := by
-  have hc : 𝓐.toSet.Countable := countable_toSet 𝓐
+theorem antichain_union_prob (h𝓐 : IsAntichain (· ⊆ ·) 𝓐.toSet) :
+    uniformOn Set.univ (⋃ s ∈ 𝓐, (SetPrefix s).toSet) = ∑ s ∈ 𝓐, uniformOn Set.univ (SetPrefix s).toSet := by
   have hd : 𝓐.toSet.PairwiseDisjoint (fun s ↦ (SetPrefix s).toSet) := by
     intro s h_s t h_t h_ne
     simp only [Function.onFun]
@@ -194,18 +193,14 @@ theorem antichain_prob (h𝓐 : IsAntichain (· ⊆ ·) 𝓐.toSet) :
     exact set_prefix_disj h_st h_ts
   have hm : ∀ s ∈ 𝓐, MeasurableSet (SetPrefix s).toSet := by
     intro s h_s ; exact trivial
-  have := measure_biUnion hc hd hm
+  rw [measure_biUnion_finset hd hm (μ := uniformOn Set.univ)]
 
-  sorry
-
-theorem LYM_inequality (h𝓐 : IsAntichain (· ⊆ ·) (𝒜 : Set (Finset α))) :
+theorem LYM_inequality (h𝓐 : IsAntichain (· ⊆ ·) 𝓐.toSet) :
     ∑ s ∈ 𝓐, ((1 : ENNReal) / (card α).choose s.card) ≤ 1 := by
-  have h_eq1 : ∀ s ∈ 𝓐, (1 : ENNReal) / (card α).choose s.card = uniformOn Set.univ (SetPrefix s).toSet := by
+  have h1 : ∀ s ∈ 𝓐, (1 : ENNReal) / (card α).choose s.card = uniformOn Set.univ (SetPrefix s).toSet := by
     intro s h_s
     rw [set_prefix_prob]
-  have h1 := Finset.sum_congr (rfl : 𝓐 = 𝓐) h_eq1
-  simp only [h1]
-
-  sorry
+  rw [Finset.sum_congr (rfl : 𝓐 = 𝓐) h1, ← antichain_union_prob h𝓐]
+  exact prob_le_one
 
 end

@@ -135,13 +135,7 @@ theorem set_prefix_card (s : Finset α) :
   rw [Fintype.card_subtype] at h_eq
   rw [SetPrefix, h_eq, Fintype.card_prod, numbering_on_card s, numbering_on_card sᶜ, card_compl]
 
-instance : MeasurableSpace (Numbering α) := ⊤
-
-lemma set_prefix_count (s : Finset α) :
-    count (SetPrefix s).toSet = ↑(s.card.factorial * (card α - s.card).factorial) := by
-  rw [← set_prefix_card s, count_apply_finset]
-
-lemma aux_1 {k m n : ℕ} (hn : 0 < n) (heq : k * m = n) :
+private lemma aux_1 {k m n : ℕ} (hn : 0 < n) (heq : k * m = n) :
     (↑ m : ENNReal) / (↑ n : ENNReal) = 1 / (↑ k : ENNReal) := by
   -- The following proof is due to Aaron Liu.
   subst heq
@@ -156,6 +150,18 @@ lemma aux_1 {k m n : ℕ} (hn : 0 < n) (heq : k * m = n) :
     simp [hk] at h
   · field_simp
     ring
+
+instance : MeasurableSpace (Numbering α) := ⊤
+
+theorem set_prefix_count (s : Finset α) :
+    count (SetPrefix s).toSet = ↑(s.card.factorial * (card α - s.card).factorial) := by
+  rw [← set_prefix_card s, count_apply_finset]
+
+#check (uniformOn (Set.univ : Set (Numbering α)))
+#check IsProbabilityMeasure (uniformOn (Set.univ : Set (Numbering α)))
+
+theorem uniform_numbering_prob_measure : IsProbabilityMeasure (uniformOn (Set.univ : Set (Numbering α))) := by
+  sorry
 
 theorem set_prefix_prob (s : Finset α) :
     uniformOn Set.univ (SetPrefix s).toSet = 1 / (card α).choose s.card := by
@@ -174,5 +180,32 @@ theorem set_prefix_disj {s t : Finset α} (h_st : ¬ s ⊆ t) (h_ts : ¬ t ⊆ s
   rcases Nat.le_total s.card t.card with h_st' | h_ts'
   · exact h_st (is_prefix_subset h_s h_t h_st')
   · exact h_ts (is_prefix_subset h_t h_s h_ts')
+
+variable {𝓐 : Finset (Finset α)}
+
+theorem antichain_prob (h𝓐 : IsAntichain (· ⊆ ·) 𝓐.toSet) :
+    uniformOn Set.univ ( ⋃ s ∈ 𝓐, (SetPrefix s).toSet) = ∑ s ∈ 𝓐, uniformOn Set.univ (SetPrefix s).toSet := by
+  have hc : 𝓐.toSet.Countable := countable_toSet 𝓐
+  have hd : 𝓐.toSet.PairwiseDisjoint (fun s ↦ (SetPrefix s).toSet) := by
+    intro s h_s t h_t h_ne
+    simp only [Function.onFun]
+    have h_st := h𝓐 h_s h_t h_ne
+    have h_ts := h𝓐 h_t h_s h_ne.symm
+    exact set_prefix_disj h_st h_ts
+  have hm : ∀ s ∈ 𝓐, MeasurableSet (SetPrefix s).toSet := by
+    intro s h_s ; exact trivial
+  have := measure_biUnion hc hd hm
+
+  sorry
+
+theorem LYM_inequality (h𝓐 : IsAntichain (· ⊆ ·) (𝒜 : Set (Finset α))) :
+    ∑ s ∈ 𝓐, ((1 : ENNReal) / (card α).choose s.card) ≤ 1 := by
+  have h_eq1 : ∀ s ∈ 𝓐, (1 : ENNReal) / (card α).choose s.card = uniformOn Set.univ (SetPrefix s).toSet := by
+    intro s h_s
+    rw [set_prefix_prob]
+  have h1 := Finset.sum_congr (rfl : 𝓐 = 𝓐) h_eq1
+  simp only [h1]
+
+  sorry
 
 end

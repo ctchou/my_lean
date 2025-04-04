@@ -20,16 +20,16 @@ class DeterministicAutomaton (α : Type*) (σ : Type*) [Fintype α] [Fintype σ]
 
 variable {α : Type*} {σ : Type*} [Fintype α] [Fintype σ] [Inhabited α] [Inhabited σ]
 
-def FiniteRun (A : Automaton α σ) (al : List α) (sl : List σ) :=
+def FiniteRun (M : Automaton α σ) (al : List α) (sl : List σ) :=
   sl.length = al.length + 1 ∧
-  sl[0]! ∈ A.init ∧
-  ∀ i < al.length, sl[i + 1]! ∈ A.next sl[i]! al[i]!
+  sl[0]! ∈ M.init ∧
+  ∀ i < al.length, sl[i + 1]! ∈ M.next sl[i]! al[i]!
 
-def InfiniteRun (A : Automaton α σ) (as : ℕ → α) (ss : ℕ → σ) :=
-  ss 0 ∈ A.init ∧
-  ∀ i : ℕ, ss (i + 1) ∈ A.next (ss i) (as i)
+def InfiniteRun (M : Automaton α σ) (as : ℕ → α) (ss : ℕ → σ) :=
+  ss 0 ∈ M.init ∧
+  ∀ i : ℕ, ss (i + 1) ∈ M.next (ss i) (as i)
 
-def FiniteAccept (A : Automaton α σ) (acc : Finset σ) (al : List α) :=
-  ∃ sl : List σ, FiniteRun A al sl ∧ sl.getLast! ∈ acc
+def FiniteAccept (M : Automaton α σ) (acc : Finset σ) (al : List α) :=
+  ∃ sl : List σ, FiniteRun M al sl ∧ sl.getLast! ∈ acc
 
 end Automaton

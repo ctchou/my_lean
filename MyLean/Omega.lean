@@ -13,56 +13,55 @@ import Mathlib.Order.Filter.ATTopBot.Basic
 
 open Filter
 
-section Automaton
+section Language
 
 def Concat {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
-  fun i ↦ if h : i < xl.length then xl[i]'h else xs (i - xl.length)
+  fun i ↦ if h : i < xl.length then xl[i] else xs (i - xl.length)
 
-def Concat' {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
-  match xl with
-  | [] => xs
-  | x :: tl => fun i ↦ if i = 0 then x else Concat' tl xs (i - 1)
+def InfOcc {X : Type*} (xs : ℕ → X) : Set X :=
+  { s : X | ∃ᶠ i in atTop, xs i = s }
+
+end Language
+
+section Automaton
 
 class Automaton (A : Type*) (S : Type*) where
   init : Set S
   next : S → A → Set S
 
-class DeterministicAutomaton (A : Type*) (S : Type*) extends Automaton A S where
+class DetAutomaton (A : Type*) (S : Type*) extends Automaton A S where
   det_init : init.ncard = 1
   det_next : ∀ s a, (next s a).ncard = 1
 
-def InfiniteOcc {S : Type*} (ss : ℕ → S) : Set S :=
-  { s : S | ∃ᶠ i in atTop, ss i = s }
-
 variable {A : Type*} {S : Type*}
 
-def FiniteRun (M : Automaton A S) (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → S) :=
+def FinRun (M : Automaton A S) (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → S) :=
   ss 0 ∈ M.init ∧
   ∀ i : Fin n, ss (i + 1) ∈ M.next (ss i) (as i)
 
-def InfiniteRun (M : Automaton A S) (as : ℕ → A) (ss : ℕ → S) :=
+def InfRun (M : Automaton A S) (as : ℕ → A) (ss : ℕ → S) :=
   ss 0 ∈ M.init ∧
   ∀ i : ℕ, ss (i + 1) ∈ M.next (ss i) (as i)
 
-def FiniteAccept (M : Automaton A S) (acc : Set S) (n : ℕ) (as : Fin n → A) :=
-  ∃ ss : Fin (n + 1) → S, FiniteRun M n as ss ∧ ss n ∈ acc
+def FinAccept (M : Automaton A S) (acc : Set S) (n : ℕ) (as : Fin n → A) :=
+  ∃ ss : Fin (n + 1) → S, FinRun M n as ss ∧ ss n ∈ acc
 
 def BuchiAccept (M : Automaton A S) (acc : Set S) (as : ℕ → A) :=
-  ∃ ss : ℕ → S, InfiniteRun M as ss ∧ InfiniteOcc ss ∩ acc ≠ ∅
+  ∃ ss : ℕ → S, InfRun M as ss ∧ InfOcc ss ∩ acc ≠ ∅
 
 def MullerAccept (M : Automaton A S) (accSet : Set (Set S)) (as : ℕ → A) :=
-  ∃ ss : ℕ → S, InfiniteRun M as ss ∧ ∃ acc ∈ accSet, InfiniteOcc ss = acc
+  ∃ ss : ℕ → S, InfRun M as ss ∧ ∃ acc ∈ accSet, InfOcc ss = acc
 
 def RabinAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ → A) :=
-  ∃ ss : ℕ → S, InfiniteRun M as ss ∧ ∃ pair ∈ accPairs, InfiniteOcc ss ∩ pair.1 ≠ ∅ ∧ InfiniteOcc ss ∩ pair.2 = ∅
+  ∃ ss : ℕ → S, InfRun M as ss ∧ ∃ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ ∧ InfOcc ss ∩ pair.2 = ∅
 
 def StreettAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ → A) :=
-  ∃ ss : ℕ → S, InfiniteRun M as ss ∧ ∀ pair ∈ accPairs, InfiniteOcc ss ∩ pair.1 ≠ ∅ → InfiniteOcc ss ∩ pair.2 ≠ ∅
+  ∃ ss : ℕ → S, InfRun M as ss ∧ ∀ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ → InfOcc ss ∩ pair.2 ≠ ∅
 
-def Regular (L : Set (List A)) :=
-  ∃ S : Type*, ∃ M : Automaton A S, ∃ acc : Set S, L = { al | ∃ n as, FiniteAccept M acc n as ∧ al = List.ofFn as }
+def RegularLang (M : Automaton A S) (acc : Set S) : Set (List A) :=
+  { al | ∃ n as, FinAccept M acc n as ∧ al = List.ofFn as }
 
-def OmegaRegular (L : Set (ℕ → A)) :=
-  ∃ S : Type*, ∃ M : Automaton A S, ∃ acc : Set S, L = { as | BuchiAccept M acc as }
+def OmegaRegularLang (M : Automaton A S) (acc : Set S) : Set (ℕ → A) :=
+  { as | BuchiAccept M acc as }
 
 end Automaton

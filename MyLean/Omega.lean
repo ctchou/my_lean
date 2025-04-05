@@ -5,31 +5,49 @@ Authors: Ching-Tsun Chou
 -/
 
 import Mathlib.Data.Fintype.Basic
-import Mathlib.Data.Finset.Card
+import Mathlib.Data.Set.Card
 import Mathlib.Data.List.Basic
+import Mathlib.Order.Filter.ATTopBot.Basic
+
+open Filter
 
 section Automaton
 
-class Automaton (α : Type*) (σ : Type*) [Fintype α] [Fintype σ] where
-  init : Finset σ
-  next : σ → α → Finset σ
+class Automaton (A : Type*) (S : Type*) where
+  init : Set S
+  next : S → A → Set S
 
-class DeterministicAutomaton (α : Type*) (σ : Type*) [Fintype α] [Fintype σ] extends Automaton α σ where
-  det_init : init.card = 1
-  det_next : ∀ s a, (next s a).card = 1
+class DeterministicAutomaton (A : Type*) (S : Type*) extends Automaton A S where
+  det_init : init.ncard = 1
+  det_next : ∀ s a, (next s a).ncard = 1
 
-variable {α : Type*} {σ : Type*} [Fintype α] [Fintype σ] [Inhabited α] [Inhabited σ]
+def InfiniteOcc {S : Type*} (ss : ℕ → S) : Set S :=
+  { s : S | ∃ᶠ i in atTop, ss i = s }
 
-def FiniteRun (M : Automaton α σ) (al : List α) (sl : List σ) :=
+variable {A : Type*} {S : Type*} [Inhabited A] [Inhabited S]
+
+def FiniteRun (M : Automaton A S) (al : List A) (sl : List S) :=
   sl.length = al.length + 1 ∧
   sl[0]! ∈ M.init ∧
   ∀ i < al.length, sl[i + 1]! ∈ M.next sl[i]! al[i]!
 
-def InfiniteRun (M : Automaton α σ) (as : ℕ → α) (ss : ℕ → σ) :=
+def InfiniteRun (M : Automaton A S) (as : ℕ → A) (ss : ℕ → S) :=
   ss 0 ∈ M.init ∧
   ∀ i : ℕ, ss (i + 1) ∈ M.next (ss i) (as i)
 
-def FiniteAccept (M : Automaton α σ) (acc : Finset σ) (al : List α) :=
-  ∃ sl : List σ, FiniteRun M al sl ∧ sl.getLast! ∈ acc
+def FiniteAccept (M : Automaton A S) (acc : Set S) (al : List A) :=
+  ∃ sl : List S, FiniteRun M al sl ∧ sl.getLast! ∈ acc
+
+def BuchiAccept (M : Automaton A S) (acc : Set S) (as : ℕ → A) :=
+  ∃ ss : ℕ → S, InfiniteRun M as ss ∧ InfiniteOcc ss ∩ acc ≠ ∅
+
+def MullerAccept (M : Automaton A S) (accSet : Set (Set S)) (as : ℕ → A) :=
+  ∃ ss : ℕ → S, InfiniteRun M as ss ∧ ∃ acc ∈ accSet, InfiniteOcc ss = acc
+
+def RabinAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ → A) :=
+  ∃ ss : ℕ → S, InfiniteRun M as ss ∧ ∃ pair ∈ accPairs, InfiniteOcc ss ∩ pair.1 ≠ ∅ ∧ InfiniteOcc ss ∩ pair.2 = ∅
+
+def StreettAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ → A) :=
+  ∃ ss : ℕ → S, InfiniteRun M as ss ∧ ∀ pair ∈ accPairs, InfiniteOcc ss ∩ pair.1 ≠ ∅ → InfiniteOcc ss ∩ pair.2 ≠ ∅
 
 end Automaton

@@ -15,6 +15,14 @@ open Filter
 
 section Automaton
 
+def Concat {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
+  fun i ↦ if i < xl.length then xl[i]'(by sorry) else xs (i - xl.length)
+
+def Concat' {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
+  match xl with
+  | [] => xs
+  | x :: tl => fun i ↦ if i = 0 then x else Concat' tl xs (i - 1)
+
 class Automaton (A : Type*) (S : Type*) where
   init : Set S
   next : S → A → Set S

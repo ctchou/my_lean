@@ -4,9 +4,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Ching-Tsun Chou
 -/
 
-import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Set.Card
+import Mathlib.Data.Fin.Basic
 import Mathlib.Data.List.Basic
+import Mathlib.Data.List.OfFn
+import Mathlib.Data.Fintype.Basic
 import Mathlib.Order.Filter.ATTopBot.Basic
 
 open Filter
@@ -24,19 +26,18 @@ class DeterministicAutomaton (A : Type*) (S : Type*) extends Automaton A S where
 def InfiniteOcc {S : Type*} (ss : ℕ → S) : Set S :=
   { s : S | ∃ᶠ i in atTop, ss i = s }
 
-variable {A : Type*} {S : Type*} [Inhabited A] [Inhabited S]
+variable {A : Type*} {S : Type*}
 
-def FiniteRun (M : Automaton A S) (al : List A) (sl : List S) :=
-  sl.length = al.length + 1 ∧
-  sl[0]! ∈ M.init ∧
-  ∀ i < al.length, sl[i + 1]! ∈ M.next sl[i]! al[i]!
+def FiniteRun (M : Automaton A S) (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → S) :=
+  ss 0 ∈ M.init ∧
+  ∀ i : Fin n, ss (i + 1) ∈ M.next (ss i) (as i)
 
 def InfiniteRun (M : Automaton A S) (as : ℕ → A) (ss : ℕ → S) :=
   ss 0 ∈ M.init ∧
   ∀ i : ℕ, ss (i + 1) ∈ M.next (ss i) (as i)
 
-def FiniteAccept (M : Automaton A S) (acc : Set S) (al : List A) :=
-  ∃ sl : List S, FiniteRun M al sl ∧ sl.getLast! ∈ acc
+def FiniteAccept (M : Automaton A S) (acc : Set S) (n : ℕ) (as : Fin n → A) :=
+  ∃ ss : Fin (n + 1) → S, FiniteRun M n as ss ∧ ss n ∈ acc
 
 def BuchiAccept (M : Automaton A S) (acc : Set S) (as : ℕ → A) :=
   ∃ ss : ℕ → S, InfiniteRun M as ss ∧ InfiniteOcc ss ∩ acc ≠ ∅
@@ -49,6 +50,9 @@ def RabinAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ 
 
 def StreettAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ → A) :=
   ∃ ss : ℕ → S, InfiniteRun M as ss ∧ ∀ pair ∈ accPairs, InfiniteOcc ss ∩ pair.1 ≠ ∅ → InfiniteOcc ss ∩ pair.2 ≠ ∅
+
+def Regular (L : Set (List A)) :=
+  ∃ S : Type*, ∃ M : Automaton A S, ∃ acc : Set S, L = { al | ∃ n as, FiniteAccept M acc n as ∧ al = List.ofFn as }
 
 def OmegaRegular (L : Set (ℕ → A)) :=
   ∃ S : Type*, ∃ M : Automaton A S, ∃ acc : Set S, L = { as | BuchiAccept M acc as }

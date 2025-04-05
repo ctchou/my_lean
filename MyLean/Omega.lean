@@ -16,7 +16,7 @@ open Filter
 section Automaton
 
 def Concat {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
-  fun i ↦ if i < xl.length then xl[i]'(by sorry) else xs (i - xl.length)
+  fun i ↦ if h : i < xl.length then xl[i]'h else xs (i - xl.length)
 
 def Concat' {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
   match xl with

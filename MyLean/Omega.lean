@@ -50,4 +50,7 @@ def RabinAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ 
 def StreettAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ → A) :=
   ∃ ss : ℕ → S, InfiniteRun M as ss ∧ ∀ pair ∈ accPairs, InfiniteOcc ss ∩ pair.1 ≠ ∅ → InfiniteOcc ss ∩ pair.2 ≠ ∅
 
+def OmegaRegular (L : Set (ℕ → A)) :=
+  ∃ S : Type*, ∃ M : Automaton A S, ∃ acc : Set S, L = { as | BuchiAccept M acc as }
+
 end Automaton

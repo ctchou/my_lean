@@ -9,9 +9,10 @@ import Mathlib.Data.Fin.Basic
 import Mathlib.Data.List.Basic
 import Mathlib.Data.List.OfFn
 import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.Sum.Basic
 import Mathlib.Order.Filter.ATTopBot.Basic
 
-open Filter
+open Filter Sum
 
 section Sequence
 
@@ -69,6 +70,13 @@ end Automaton
 section RegLangUnion
 
 variable {A : Type*} {S0 S1 : Type*}
+
+def AutomatonUnion (M0 : Automaton A S0) (M1 : Automaton A S1) : Automaton A (S0 ⊕ S1) where
+  init := inl '' (M0.init) ∪ inr '' (M1.init)
+  next := fun s a ↦
+    match s with
+    | inl s0 => inl '' (M0.next s0 a)
+    | inr s1 => inr '' (M0.next s0 a)
 
 theorem reg_lang_union (M0 : Automaton A S0) (acc0 : Set S0) (M1 : Automaton A S1) (acc1 : Set S1) :
     ∃ S, ∃ M : Automaton A S, ∃ acc, RegLangOf M acc = RegLangOf M0 acc0 ∪ RegLangOf M1 acc1 :=

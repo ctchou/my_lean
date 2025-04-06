@@ -58,24 +58,24 @@ def RabinAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ 
 def StreettAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ → A) :=
   ∃ ss : ℕ → S, InfRun M as ss ∧ ∀ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ → InfOcc ss ∩ pair.2 ≠ ∅
 
-def LangOf (M : Automaton A S) (acc : Set S) : Set (List A) :=
+def RegLangOf (M : Automaton A S) (acc : Set S) : Set (List A) :=
   { al | ∃ n as, FinAccept M acc n as ∧ al = List.ofFn as }
 
-def OmegaLangOf (M : Automaton A S) (acc : Set S) : Set (ℕ → A) :=
+def OmegaRegLangOf (M : Automaton A S) (acc : Set S) : Set (ℕ → A) :=
   { as | BuchiAccept M acc as }
 
 end Automaton
 
 section LangUnion
 
-variable {A : Type*} {S1 S2 : Type*}
+variable {A : Type*} {S0 S1 : Type*}
 
-theorem reg_lang_union (M1 : Automaton A S1) (acc1 : Set S1) (M2 : Automaton A S2) (acc2 : Set S2) :
-    ∃ S, ∃ M : Automaton A S, ∃ acc, LangOf M acc = LangOf M1 acc1 ∪ LangOf M2 acc2 :=
+theorem reg_lang_union (M0 : Automaton A S0) (acc0 : Set S0) (M1 : Automaton A S1) (acc1 : Set S1) :
+    ∃ S, ∃ M : Automaton A S, ∃ acc, RegLangOf M acc = RegLangOf M0 acc0 ∪ RegLangOf M1 acc1 :=
   sorry
 
-theorem omega_reg_lang_union (M1 : Automaton A S1) (acc1 : Set S1) (M2 : Automaton A S2) (acc2 : Set S2) :
-    ∃ S, ∃ M : Automaton A S, ∃ acc, OmegaLangOf M acc = OmegaLangOf M1 acc1 ∪ OmegaLangOf M2 acc2 :=
+theorem omega_reg_lang_union (M0 : Automaton A S0) (acc0 : Set S0) (M1 : Automaton A S1) (acc1 : Set S1) :
+    ∃ S, ∃ M : Automaton A S, ∃ acc, OmegaRegLangOf M acc = OmegaRegLangOf M0 acc0 ∪ OmegaRegLangOf M1 acc1 :=
   sorry
 
 end LangUnion

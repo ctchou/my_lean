@@ -13,7 +13,7 @@ import Mathlib.Order.Filter.ATTopBot.Basic
 
 open Filter
 
-section Language
+section Sequence
 
 def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
   fun i ↦ if h : i < xl.length then xl[i] else xs (i - xl.length)
@@ -21,7 +21,7 @@ def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
 def InfOcc {X : Type*} (xs : ℕ → X) : Set X :=
   { s : X | ∃ᶠ i in atTop, xs i = s }
 
-end Language
+end Sequence
 
 section Automaton
 
@@ -66,7 +66,7 @@ def OmegaRegLangOf (M : Automaton A S) (acc : Set S) : Set (ℕ → A) :=
 
 end Automaton
 
-section LangUnion
+section RegLangUnion
 
 variable {A : Type*} {S0 S1 : Type*}
 
@@ -78,4 +78,4 @@ theorem omega_reg_lang_union (M0 : Automaton A S0) (acc0 : Set S0) (M1 : Automat
     ∃ S, ∃ M : Automaton A S, ∃ acc, OmegaRegLangOf M acc = OmegaRegLangOf M0 acc0 ∪ OmegaRegLangOf M1 acc1 :=
   sorry
 
-end LangUnion
+end RegLangUnion

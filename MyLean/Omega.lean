@@ -93,14 +93,18 @@ lemma automaton_union_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
   constructor
   · sorry
   · rintro (⟨ss0, h_run, h_ss⟩ | ⟨ss1, h_run, h_ss⟩) <;> rw [h_ss]
-    constructor
     · constructor
       · simp [Automaton.init, AutomatonUnion]
         exact h_run.1
       · intro i
         simp [Automaton.next, AutomatonUnion]
         exact h_run.2 i
-    · sorry
+    · constructor
+      · simp [Automaton.init, AutomatonUnion]
+        exact h_run.1
+      · intro i
+        simp [Automaton.next, AutomatonUnion]
+        exact h_run.2 i
 
 variable (acc0 : Set S0) (acc1 : Set S1)
 

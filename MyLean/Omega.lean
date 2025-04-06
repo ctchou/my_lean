@@ -15,7 +15,7 @@ open Filter
 
 section Language
 
-def Concat {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
+def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
   fun i ↦ if h : i < xl.length then xl[i] else xs (i - xl.length)
 
 def InfOcc {X : Type*} (xs : ℕ → X) : Set X :=
@@ -58,10 +58,24 @@ def RabinAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ 
 def StreettAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ → A) :=
   ∃ ss : ℕ → S, InfRun M as ss ∧ ∀ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ → InfOcc ss ∩ pair.2 ≠ ∅
 
-def RegularLang (M : Automaton A S) (acc : Set S) : Set (List A) :=
+def LangOf (M : Automaton A S) (acc : Set S) : Set (List A) :=
   { al | ∃ n as, FinAccept M acc n as ∧ al = List.ofFn as }
 
-def OmegaRegularLang (M : Automaton A S) (acc : Set S) : Set (ℕ → A) :=
+def OmegaLangOf (M : Automaton A S) (acc : Set S) : Set (ℕ → A) :=
   { as | BuchiAccept M acc as }
 
 end Automaton
+
+section LangUnion
+
+variable {A : Type*} {S1 S2 : Type*}
+
+theorem reg_lang_union (M1 : Automaton A S1) (acc1 : Set S1) (M2 : Automaton A S2) (acc2 : Set S2) :
+    ∃ S, ∃ M : Automaton A S, ∃ acc, LangOf M acc = LangOf M1 acc1 ∪ LangOf M2 acc2 :=
+  sorry
+
+theorem omega_reg_lang_union (M1 : Automaton A S1) (acc1 : Set S1) (M2 : Automaton A S2) (acc2 : Set S2) :
+    ∃ S, ∃ M : Automaton A S, ∃ acc, OmegaLangOf M acc = OmegaLangOf M1 acc1 ∪ OmegaLangOf M2 acc2 :=
+  sorry
+
+end LangUnion

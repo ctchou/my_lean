@@ -12,7 +12,7 @@ import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Sum.Basic
 import Mathlib.Order.Filter.ATTopBot.Basic
 
-open Sum Filter Function
+open Set Sum Filter Function
 
 section Sequence
 
@@ -71,7 +71,7 @@ section RegLangUnion
 
 variable {A : Type*} {S0 S1 : Type*}
 
-def AutomatonUnion (M0 : Automaton A S0) (M1 : Automaton A S1) : Automaton A (S0 ⊕ S1) where
+def AutomatonSum (M0 : Automaton A S0) (M1 : Automaton A S1) : Automaton A (S0 ⊕ S1) where
   init := inl '' (M0.init) ∪ inr '' (M1.init)
   next := fun s a ↦
     match s with
@@ -80,31 +80,34 @@ def AutomatonUnion (M0 : Automaton A S0) (M1 : Automaton A S1) : Automaton A (S0
 
 variable (M0 : Automaton A S0) (M1 : Automaton A S1)
 
-lemma automaton_union_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → (S0 ⊕ S1)) :
-    FinRun (AutomatonUnion M0 M1) n as ss ↔
+lemma automaton_sum_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → (S0 ⊕ S1)) :
+    FinRun (AutomatonSum M0 M1) n as ss ↔
       (∃ ss0, FinRun M0 n as ss0 ∧ ss = inl ∘ ss0) ∨
       (∃ ss1, FinRun M1 n as ss1 ∧ ss = inr ∘ ss1) :=
   sorry
 
-lemma automaton_union_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
-    InfRun (AutomatonUnion M0 M1) as ss ↔
+lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
+    InfRun (AutomatonSum M0 M1) as ss ↔
       (∃ ss0, InfRun M0 as ss0 ∧ ss = inl ∘ ss0) ∨
       (∃ ss1, InfRun M1 as ss1 ∧ ss = inr ∘ ss1) := by
   constructor
-  · sorry
-  · rintro (⟨ss0, h_run, h_ss⟩ | ⟨ss1, h_run, h_ss⟩) <;> rw [h_ss]
-    · constructor
-      · simp [Automaton.init, AutomatonUnion]
+  · rintro ⟨h_init, h_next⟩
+    simp [Automaton.init, AutomatonSum] at h_init
+    rcases h_init with ⟨s0, h_s0_init, h_s0_ss⟩ | ⟨s1, h_s1_init, h_s1_ss⟩
+    · left
+      sorry
+    · right
+      sorry
+  · rintro (⟨ss0, h_run, h_ss⟩ | ⟨ss1, h_run, h_ss⟩)
+    repeat {
+      rw [h_ss]
+      constructor
+      · simp [Automaton.init, AutomatonSum]
         exact h_run.1
       · intro i
-        simp [Automaton.next, AutomatonUnion]
+        simp [Automaton.next, AutomatonSum]
         exact h_run.2 i
-    · constructor
-      · simp [Automaton.init, AutomatonUnion]
-        exact h_run.1
-      · intro i
-        simp [Automaton.next, AutomatonUnion]
-        exact h_run.2 i
+    }
 
 variable (acc0 : Set S0) (acc1 : Set S1)
 

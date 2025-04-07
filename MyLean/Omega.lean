@@ -132,7 +132,7 @@ lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
       constructor
       · constructor
         · have h_s1 : ss1 0 = s1 := by
-            apply inl_injective (β := S1)
+            apply inr_injective (α := S0)
             rw [h_s1_ss, ← h_ss 0]
           simp [h_s1] ; assumption
         · intro i

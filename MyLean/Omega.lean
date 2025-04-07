@@ -107,16 +107,39 @@ lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
       choose ss0 h_ss using h_run
       use ss0
       constructor
-      · have h_s0 : ss0 0 = s0 := by
-          apply inl_injective (β := S1)
-          rw [h_s0_ss, ← h_ss 0]
-        constructor
-        · simp [h_s0] ; assumption
+      · constructor
+        · have h_s0 : ss0 0 = s0 := by
+            apply inl_injective (β := S1)
+            rw [h_s0_ss, ← h_ss 0]
+          simp [h_s0] ; assumption
         · intro i
-          sorry
+          have h_next_i := h_next i
+          simp [h_ss, Automaton.next, AutomatonSum] at h_next_i
+          assumption
       · ext i ; simp [h_ss]
     · right
-      sorry
+      have h_run : ∀ i, ∃ si : S1, ss i = inr si := by
+        intro i ; induction' i with i h_i
+        · use s1 ; rw [h_s1_ss]
+        rcases h_i with ⟨si, h_si⟩
+        have h_next_i := h_next i
+        simp [Automaton.next, AutomatonSum, h_si] at h_next_i
+        rcases h_next_i with ⟨si', h_si'⟩
+        use si'
+        rw [h_si'.2]
+      choose ss1 h_ss using h_run
+      use ss1
+      constructor
+      · constructor
+        · have h_s1 : ss1 0 = s1 := by
+            apply inl_injective (β := S1)
+            rw [h_s1_ss, ← h_ss 0]
+          simp [h_s1] ; assumption
+        · intro i
+          have h_next_i := h_next i
+          simp [h_ss, Automaton.next, AutomatonSum] at h_next_i
+          assumption
+      · ext i ; simp [h_ss]
   · rintro (⟨ss0, h_run, h_ss⟩ | ⟨ss1, h_run, h_ss⟩)
     repeat {
       rw [h_ss]

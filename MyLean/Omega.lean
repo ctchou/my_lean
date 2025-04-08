@@ -71,7 +71,21 @@ end Automaton
 
 section RegLangUnion
 
-variable {A : Type*}
+variable {A I : Type*}
+
+def AutomatonSigma (M : I → Automaton A) : Automaton A where
+  State := Σ i : I, (M i).State
+  init := ⋃ i : I, Sigma.mk i '' (M i).init
+  next := fun ⟨i, s⟩ a ↦ Sigma.mk i '' (M i).next s a
+
+variable (M : I → Automaton A)
+
+theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).State) :
+    InfRun (AutomatonSigma M) as ss ↔ ∃ i ss_i, InfRun (M i) as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
+  constructor
+  · sorry
+  · rintro ⟨i, ss_i, h_run, h_ss⟩
+    sorry
 
 def AutomatonSum (M0 : Automaton A) (M1 : Automaton A) : Automaton A where
   State := M0.State ⊕ M1.State
@@ -83,13 +97,13 @@ def AutomatonSum (M0 : Automaton A) (M1 : Automaton A) : Automaton A where
 
 variable (M0 : Automaton A) (M1 : Automaton A)
 
-lemma automaton_sum_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → (M0.State ⊕ M1.State)) :
+theorem automaton_sum_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → (M0.State ⊕ M1.State)) :
     FinRun (AutomatonSum M0 M1) n as ss ↔
       (∃ ss0, FinRun M0 n as ss0 ∧ ss = inl ∘ ss0) ∨
       (∃ ss1, FinRun M1 n as ss1 ∧ ss = inr ∘ ss1) :=
   sorry
 
-lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (M0.State ⊕ M1.State)) :
+theorem automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (M0.State ⊕ M1.State)) :
     InfRun (AutomatonSum M0 M1) as ss ↔
       (∃ ss0, InfRun M0 as ss0 ∧ ss = inl ∘ ss0) ∨
       (∃ ss1, InfRun M1 as ss1 ∧ ss = inr ∘ ss1) := by

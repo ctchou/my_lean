@@ -10,9 +10,10 @@ import Mathlib.Data.List.Basic
 import Mathlib.Data.List.OfFn
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Sum.Basic
+import Mathlib.Data.Sigma.Basic
 import Mathlib.Order.Filter.ATTopBot.Basic
 
-open Set Sum Filter Function
+open BigOperators Function Filter Set Sum Sigma
 
 section Sequence
 
@@ -26,67 +27,69 @@ end Sequence
 
 section Automaton
 
-class Automaton (A : Type*) (S : Type*) where
-  init : Set S
-  next : S → A → Set S
+class Automaton (A : Type*) where
+  State : Type*
+  init : Set State
+  next : State → A → Set State
 
-class DetAutomaton (A : Type*) (S : Type*) extends Automaton A S where
+class DetAutomaton (A : Type*) extends Automaton A where
   det_init : init.ncard = 1
   det_next : ∀ s a, (next s a).ncard = 1
 
-variable {A : Type*} {S : Type*}
+variable {A : Type*}
 
-def FinRun (M : Automaton A S) (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → S) :=
+def FinRun (M : Automaton A) (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → M.State) :=
   ss 0 ∈ M.init ∧
   ∀ i : Fin n, ss (i + 1) ∈ M.next (ss i) (as i)
 
-def InfRun (M : Automaton A S) (as : ℕ → A) (ss : ℕ → S) :=
+def InfRun (M : Automaton A) (as : ℕ → A) (ss : ℕ → M.State) :=
   ss 0 ∈ M.init ∧
   ∀ i : ℕ, ss (i + 1) ∈ M.next (ss i) (as i)
 
-def FinAccept (M : Automaton A S) (acc : Set S) (n : ℕ) (as : Fin n → A) :=
-  ∃ ss : Fin (n + 1) → S, FinRun M n as ss ∧ ss n ∈ acc
+def FinAccept (M : Automaton A) (acc : Set M.State) (n : ℕ) (as : Fin n → A) :=
+  ∃ ss : Fin (n + 1) → M.State, FinRun M n as ss ∧ ss n ∈ acc
 
-def BuchiAccept (M : Automaton A S) (acc : Set S) (as : ℕ → A) :=
-  ∃ ss : ℕ → S, InfRun M as ss ∧ InfOcc ss ∩ acc ≠ ∅
+def BuchiAccept (M : Automaton A) (acc : Set M.State) (as : ℕ → A) :=
+  ∃ ss : ℕ → M.State, InfRun M as ss ∧ InfOcc ss ∩ acc ≠ ∅
 
-def MullerAccept (M : Automaton A S) (accSet : Set (Set S)) (as : ℕ → A) :=
-  ∃ ss : ℕ → S, InfRun M as ss ∧ ∃ acc ∈ accSet, InfOcc ss = acc
+def MullerAccept (M : Automaton A) (accSet : Set (Set M.State)) (as : ℕ → A) :=
+  ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∃ acc ∈ accSet, InfOcc ss = acc
 
-def RabinAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ → A) :=
-  ∃ ss : ℕ → S, InfRun M as ss ∧ ∃ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ ∧ InfOcc ss ∩ pair.2 = ∅
+def RabinAccept (M : Automaton A) (accPairs : Set (Set M.State × Set M.State)) (as : ℕ → A) :=
+  ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∃ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ ∧ InfOcc ss ∩ pair.2 = ∅
 
-def StreettAccept (M : Automaton A S) (accPairs : Set (Set S × Set S)) (as : ℕ → A) :=
-  ∃ ss : ℕ → S, InfRun M as ss ∧ ∀ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ → InfOcc ss ∩ pair.2 ≠ ∅
+def StreettAccept (M : Automaton A) (accPairs : Set (Set M.State × Set M.State)) (as : ℕ → A) :=
+  ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∀ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ → InfOcc ss ∩ pair.2 ≠ ∅
 
-def RegLangOf (M : Automaton A S) (acc : Set S) : Set (List A) :=
+def RegLangOf (M : Automaton A) (acc : Set M.State) : Set (List A) :=
   { al | ∃ n as, FinAccept M acc n as ∧ al = List.ofFn as }
 
-def OmegaRegLangOf (M : Automaton A S) (acc : Set S) : Set (ℕ → A) :=
+def OmegaRegLangOf (M : Automaton A) (acc : Set M.State) : Set (ℕ → A) :=
   { as | BuchiAccept M acc as }
 
 end Automaton
 
 section RegLangUnion
 
-variable {A : Type*} {S0 S1 : Type*}
+variable {A : Type*}
 
-def AutomatonSum (M0 : Automaton A S0) (M1 : Automaton A S1) : Automaton A (S0 ⊕ S1) where
+def AutomatonSum (M0 : Automaton A) (M1 : Automaton A) : Automaton A where
+  State := M0.State ⊕ M1.State
   init := inl '' (M0.init) ∪ inr '' (M1.init)
   next := fun s a ↦
     match s with
     | inl s0 => inl '' (M0.next s0 a)
     | inr s1 => inr '' (M1.next s1 a)
 
-variable (M0 : Automaton A S0) (M1 : Automaton A S1)
+variable (M0 : Automaton A) (M1 : Automaton A)
 
-lemma automaton_sum_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → (S0 ⊕ S1)) :
+lemma automaton_sum_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → (M0.State ⊕ M1.State)) :
     FinRun (AutomatonSum M0 M1) n as ss ↔
       (∃ ss0, FinRun M0 n as ss0 ∧ ss = inl ∘ ss0) ∨
       (∃ ss1, FinRun M1 n as ss1 ∧ ss = inr ∘ ss1) :=
   sorry
 
-lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
+lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (M0.State ⊕ M1.State)) :
     InfRun (AutomatonSum M0 M1) as ss ↔
       (∃ ss0, InfRun M0 as ss0 ∧ ss = inl ∘ ss0) ∨
       (∃ ss1, InfRun M1 as ss1 ∧ ss = inr ∘ ss1) := by
@@ -95,7 +98,7 @@ lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
     simp [Automaton.init, AutomatonSum] at h_init
     rcases h_init with ⟨s0, h_s0_init, h_s0_ss⟩ | ⟨s1, h_s1_init, h_s1_ss⟩
     · left
-      have h_run : ∀ i, ∃ si : S0, ss i = inl si := by
+      have h_run : ∀ i, ∃ si : M0.State, ss i = inl si := by
         intro i ; induction' i with i h_i
         · use s0 ; rw [h_s0_ss]
         rcases h_i with ⟨si, h_si⟩
@@ -109,7 +112,7 @@ lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
       constructor
       · constructor
         · have h_s0 : ss0 0 = s0 := by
-            apply inl_injective (β := S1)
+            apply inl_injective
             rw [h_s0_ss, ← h_ss 0]
           simp [h_s0] ; assumption
         · intro i
@@ -118,7 +121,7 @@ lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
           assumption
       · ext i ; simp [h_ss]
     · right
-      have h_run : ∀ i, ∃ si : S1, ss i = inr si := by
+      have h_run : ∀ i, ∃ si : M1.State, ss i = inr si := by
         intro i ; induction' i with i h_i
         · use s1 ; rw [h_s1_ss]
         rcases h_i with ⟨si, h_si⟩
@@ -132,7 +135,7 @@ lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
       constructor
       · constructor
         · have h_s1 : ss1 0 = s1 := by
-            apply inr_injective (α := S0)
+            apply inr_injective
             rw [h_s1_ss, ← h_ss 0]
           simp [h_s1] ; assumption
         · intro i
@@ -151,14 +154,14 @@ lemma automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (S0 ⊕ S1)) :
         exact h_run.2 i
     }
 
-variable (acc0 : Set S0) (acc1 : Set S1)
+variable (acc0 : Set M0.State) (acc1 : Set M1.State)
 
 theorem reg_lang_union :
-    ∃ S, ∃ M : Automaton A S, ∃ acc, RegLangOf M acc = RegLangOf M0 acc0 ∪ RegLangOf M1 acc1 :=
+    ∃ M : Automaton A, ∃ acc, RegLangOf M acc = RegLangOf M0 acc0 ∪ RegLangOf M1 acc1 :=
   sorry
 
 theorem omega_reg_lang_union :
-    ∃ S, ∃ M : Automaton A S, ∃ acc, OmegaRegLangOf M acc = OmegaRegLangOf M0 acc0 ∪ OmegaRegLangOf M1 acc1 :=
+    ∃ M : Automaton A, ∃ acc, OmegaRegLangOf M acc = OmegaRegLangOf M0 acc0 ∪ OmegaRegLangOf M1 acc1 :=
   sorry
 
 end RegLangUnion

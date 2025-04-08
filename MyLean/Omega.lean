@@ -83,7 +83,12 @@ variable (M : I → Automaton A)
 theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).State) :
     InfRun (AutomatonSigma M) as ss ↔ ∃ i ss_i, InfRun (M i) as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
   constructor
-  · sorry
+  · rintro ⟨h_init, h_next⟩
+    simp [AutomatonSigma, Automaton.init] at h_init
+    rcases h_init with ⟨i, s0, h_s0_init, h_s0_ss⟩
+    have h_ss : ∀ k, ∃ s_k, ss k = Sigma.mk i s_k := by
+      sorry
+    sorry
   · rintro ⟨i, ss_i, h_run, h_ss⟩
     simp [h_ss, AutomatonSigma]
     constructor

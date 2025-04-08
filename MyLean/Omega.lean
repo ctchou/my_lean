@@ -40,11 +40,11 @@ variable {A : Type*}
 
 def FinRun (M : Automaton A) (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → M.State) :=
   ss 0 ∈ M.init ∧
-  ∀ i : Fin n, ss (i + 1) ∈ M.next (ss i) (as i)
+  ∀ k : Fin n, ss (k + 1) ∈ M.next (ss k) (as k)
 
 def InfRun (M : Automaton A) (as : ℕ → A) (ss : ℕ → M.State) :=
   ss 0 ∈ M.init ∧
-  ∀ i : ℕ, ss (i + 1) ∈ M.next (ss i) (as i)
+  ∀ k : ℕ, ss (k + 1) ∈ M.next (ss k) (as k)
 
 def FinAccept (M : Automaton A) (acc : Set M.State) (n : ℕ) (as : Fin n → A) :=
   ∃ ss : Fin (n + 1) → M.State, FinRun M n as ss ∧ ss n ∈ acc
@@ -85,7 +85,14 @@ theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).S
   constructor
   · sorry
   · rintro ⟨i, ss_i, h_run, h_ss⟩
-    sorry
+    simp [h_ss, AutomatonSigma]
+    constructor
+    · simp [Automaton.init]
+      use i, (ss_i 0)
+      simp ; exact h_run.1
+    · intro k
+      simp [Automaton.next]
+      exact h_run.2 k
 
 def AutomatonSum (M0 : Automaton A) (M1 : Automaton A) : Automaton A where
   State := M0.State ⊕ M1.State

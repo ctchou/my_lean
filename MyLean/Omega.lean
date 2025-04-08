@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Ching-Tsun Chou
 -/
 
+import Mathlib.Logic.Lemmas
 import Mathlib.Data.Set.Card
 import Mathlib.Data.Fin.Basic
 import Mathlib.Data.List.Basic
@@ -84,11 +85,35 @@ theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).S
     InfRun (AutomatonSigma M) as ss ↔ ∃ i ss_i, InfRun (M i) as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
   constructor
   · rintro ⟨h_init, h_next⟩
-    simp [AutomatonSigma, Automaton.init] at h_init
-    rcases h_init with ⟨i, s0, h_s0_init, h_s0_ss⟩
-    have h_ss : ∀ k, ∃ s_k, ss k = Sigma.mk i s_k := by
-      sorry
-    sorry
+    have := h_init
+    simp [AutomatonSigma, Automaton.init] at this
+    rcases this with ⟨i, s0, h_s0_init, h_s0_ss⟩
+    have h_ss_exists : ∀ k, ∃ sk : (M i).State, ss k = Sigma.mk i sk := by
+      intro k ; induction' k with k h_k
+      · use s0 ; rw [h_s0_ss]
+      rcases h_k with ⟨sk, h_sk⟩
+      have h_next_k := h_next k
+      simp [AutomatonSigma, h_sk] at h_next_k
+      rcases h_next_k with ⟨sk', h_sk'⟩
+      use sk' ; simp [h_sk'.2]
+    choose ss_i h_ss_i using h_ss_exists
+    use i, ss_i
+    constructor
+    · constructor
+      · rw [h_ss_i 0, Automaton.init] at h_init
+        have := (AutomatonSigma M).init
+        unfold AutomatonSigma at h_init
+        have := mem_sigma_iff.mp h_init
+        simp [AutomatonSigma] at h_init
+        rcases h_init with ⟨i', si', h_si', h_i', h_si'_eq⟩
+        have := HEq.eq h_si'_eq
+        sorry
+      · intro k
+        have h_next_k := h_next k
+        rw [h_ss_i k, h_ss_i (k + 1)] at h_next_k
+        simp [AutomatonSigma] at h_next_k
+        assumption
+    · ext k <;> rw [h_ss_i k] <;> simp
   · rintro ⟨i, ss_i, h_run, h_ss⟩
     simp [h_ss, AutomatonSigma]
     constructor

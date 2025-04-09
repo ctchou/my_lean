@@ -101,10 +101,7 @@ theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).S
     constructor
     · constructor
       · rw [h_ss_i 0, Automaton.init] at h_init
-        have := (AutomatonSigma M).init
-        unfold AutomatonSigma at h_init
-        have := mem_sigma_iff.mp h_init
-        simp [AutomatonSigma] at h_init
+        simp only [AutomatonSigma] at h_init
         rcases h_init with ⟨i', si', h_si', h_i', h_si'_eq⟩
         have := HEq.eq h_si'_eq
         sorry

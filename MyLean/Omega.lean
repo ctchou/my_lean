@@ -101,8 +101,7 @@ theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).S
     constructor
     · constructor
       · rw [h_ss_i 0, Automaton.init] at h_init
-        simp only [AutomatonSigma] at h_init
-        simp only [Set.mem_iUnion, Set.mem_image, Sigma.mk.injEq] at h_init
+        simp [AutomatonSigma] at h_init
         obtain ⟨i, s', h_s', rfl, h_eq⟩ := h_init
         rw [heq_eq_eq] at h_eq
         rw [h_eq] at h_s'

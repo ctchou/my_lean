@@ -31,3 +31,8 @@ example (I : Type*) (F : I → C) (i : I) (x : (F i).T)
   rw [heq_eq_eq] at h
   cases h
   assumption
+
+example (I : Type*) (F : I → C) (i : I) (x : (F i).T)
+    (h : ⟨i, x⟩ ∈ Set.univ.sigma (fun i ↦ (F i).s)) : x ∈ (F i).s := by
+  simp [Set.mk_sigma_iff] at h
+  assumption

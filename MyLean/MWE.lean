@@ -36,3 +36,16 @@ example (I : Type*) (F : I → C) (i : I) (x : (F i).T)
     (h : ⟨i, x⟩ ∈ Set.univ.sigma (fun i ↦ (F i).s)) : x ∈ (F i).s := by
   simp [Set.mk_sigma_iff] at h
   assumption
+
+variable (I : Type*) (F : I → C)
+#check Σ i : I, (F i).T
+#check (i : I) × (F i).T
+
+variable (x : Σ i : I, (F i).T)
+#check (x : (i : I) × (F i).T)
+
+variable (x : (i : I) × (F i).T)
+#check (x : Σ i : I, (F i).T)
+
+variable (i : I) (x : (F i).T)
+#check (Set.univ.sigma (fun i ↦ (F i).s))

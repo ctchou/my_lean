@@ -81,6 +81,49 @@ def AutomatonSigma (M : I → Automaton A) : Automaton A where
 
 variable (M : I → Automaton A)
 
+theorem automaton_sigma_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → Σ i : I, (M i).State) :
+    FinRun (AutomatonSigma M) n as ss ↔ ∃ i ss_i, FinRun (M i) n as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
+  constructor
+  · rintro ⟨h_init, h_next⟩
+    have := h_init
+    simp [AutomatonSigma, Automaton.init] at this
+    rcases this with ⟨i, s0, h_s0_init, h_s0_ss⟩
+    have h_ss_exists : ∀ k : Fin (n + 1), ∃ sk : (M i).State, ss k = Sigma.mk i sk := by
+      intro k ; induction' k using Fin.induction with k h_k
+      · use s0 ; rw [h_s0_ss]
+      rcases h_k with ⟨sk, h_sk⟩
+      have h_next_k := h_next k
+      simp [AutomatonSigma, h_sk] at h_next_k
+      rcases h_next_k with ⟨sk', h_sk'⟩
+      use sk' ; simp [h_sk'.2]
+    choose ss_i h_ss_i using h_ss_exists
+    use i, ss_i
+    constructor
+    · constructor
+      · rw [h_ss_i 0, Automaton.init] at h_init
+        simp [AutomatonSigma] at h_init
+        obtain ⟨i, s', h_s', rfl, h_eq⟩ := h_init
+        rw [heq_eq_eq] at h_eq
+        rw [h_eq] at h_s'
+        assumption
+      · intro k
+        have h_next_k := h_next k
+        rw [h_ss_i k, h_ss_i (k + 1)] at h_next_k
+        simp [AutomatonSigma] at h_next_k
+        simp ; assumption
+    · ext k <;> rw [h_ss_i k] <;> simp
+  · rintro ⟨i, ss_i, h_run, h_ss⟩
+    simp [h_ss, AutomatonSigma]
+    constructor
+    · simp [Automaton.init]
+      use i, (ss_i 0)
+      simp ; exact h_run.1
+    · intro k
+      simp [Automaton.next]
+      have h_k := h_run.2 k
+      simp at h_k
+      exact h_k
+
 theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).State) :
     InfRun (AutomatonSigma M) as ss ↔ ∃ i ss_i, InfRun (M i) as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
   constructor

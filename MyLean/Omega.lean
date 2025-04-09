@@ -102,9 +102,11 @@ theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).S
     · constructor
       · rw [h_ss_i 0, Automaton.init] at h_init
         simp only [AutomatonSigma] at h_init
-        rcases h_init with ⟨i', si', h_si', h_i', h_si'_eq⟩
-        have := HEq.eq h_si'_eq
-        sorry
+        simp only [Set.mem_iUnion, Set.mem_image, Sigma.mk.injEq] at h_init
+        obtain ⟨i, s', h_s', rfl, h_eq⟩ := h_init
+        rw [heq_eq_eq] at h_eq
+        rw [h_eq] at h_s'
+        assumption
       · intro k
         have h_next_k := h_next k
         rw [h_ss_i k, h_ss_i (k + 1)] at h_next_k

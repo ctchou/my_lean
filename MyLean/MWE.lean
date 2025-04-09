@@ -26,4 +26,8 @@ class C where
 
 example (I : Type*) (F : I → C) (i : I) (x : (F i).T)
     (h : ⟨i, x⟩ ∈ ⋃ i, Sigma.mk i '' (F i).s) : x ∈ (F i).s := by
-  sorry
+  simp only [Set.mem_iUnion, Set.mem_image, Sigma.mk.injEq] at h -- from simp?
+  obtain ⟨i, x, hx, rfl, h⟩ := h
+  rw [heq_eq_eq] at h
+  cases h
+  assumption

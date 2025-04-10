@@ -178,7 +178,20 @@ theorem reg_lang_union :
   use { s | ∃ i : I, ∃ si ∈ acc i, s = Sigma.mk i si }
   ext al ; simp [RegLangOf, FinAccept]
   constructor
-  · sorry
+  · rintro ⟨n, as, ⟨ss, h_run, h_acc⟩, h_al⟩
+    obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sigma_fin_run M n as ss).mp h_run
+    use i, n, as
+    constructor
+    · use ss_i
+      constructor
+      · assumption
+      obtain ⟨i', si', h_si', h_last⟩ := h_acc
+      simp [h_ss_i] at h_last
+      rw [Sigma.mk.inj_iff] at h_last
+      obtain ⟨rfl, h_si'_eq⟩ := h_last
+      rw [heq_eq_eq] at h_si'_eq
+      rw [h_si'_eq] ; assumption
+    · assumption
   · sorry
 
 theorem omega_reg_lang_union [h : Fintype I] :

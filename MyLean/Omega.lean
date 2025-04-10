@@ -192,7 +192,16 @@ theorem reg_lang_union :
       rw [heq_eq_eq] at h_si'_eq
       rw [h_si'_eq] ; assumption
     · assumption
-  · sorry
+  · rintro ⟨i, n, as, ⟨ss_i, h_run, h_last⟩, h_al⟩
+    use n, as
+    constructor
+    · use ((Sigma.mk i) ∘ ss_i)
+      constructor
+      · apply (automaton_sigma_fin_run M n as ((Sigma.mk i) ∘ ss_i)).mpr
+        use i, ss_i
+      · use i, ss_i (Fin.last n)
+        simp ; assumption
+    · assumption
 
 theorem omega_reg_lang_union [h : Fintype I] :
     ∃ M' : Automaton A, ∃ acc' : Set (M'.State), OmegaRegLangOf M' acc' = ⋃ i : I, OmegaRegLangOf (M i) (acc i) := by

@@ -171,17 +171,16 @@ universe u v w
 
 variable {A I : Type u} (M : I → Automaton.{u, v} A)
 variable (acc : (i : I) → Set ((M i).State))
---variable (acc : (i : I) → Set ((M i).State))
 
 #check acc
 variable (i : I) in
 #check (acc i)
-#check (⋃ i : I, acc i)
+#check (⋃ i : I, Sigma.mk '' (acc i))
 
 theorem reg_lang_union :
     ∃ M' : Automaton.{u, max u v} A, ∃ acc' : Set (M'.State), RegLangOf M' acc' = ⋃ i : I, RegLangOf (M i) (acc i) := by
   use (AutomatonSigma M)
-  let acc' : Set (AutomatonSigma.{u, u, max u v} M).State := ⋃ i : I, acc i
+  use (⋃ i : I, Sigma.mk '' (acc i))
 
   sorry
 

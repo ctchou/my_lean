@@ -167,10 +167,22 @@ end AutomatonSigma
 
 section RegLangUnion
 
-variable {A I : Type*} (M : I → Automaton A) (acc : (i : I) → Set ((M i).State))
+universe u v w
+
+variable {A I : Type u} (M : I → Automaton.{u, v} A)
+variable (acc : (i : I) → Set ((M i).State))
+--variable (acc : (i : I) → Set ((M i).State))
+
+#check acc
+variable (i : I) in
+#check (acc i)
+#check (⋃ i : I, acc i)
 
 theorem reg_lang_union :
-    ∃ M' : Automaton A, ∃ acc' : Set (M'.State), RegLangOf M' acc' = ⋃ i : I, RegLangOf (M i) (acc i) := by
+    ∃ M' : Automaton.{u, max u v} A, ∃ acc' : Set (M'.State), RegLangOf M' acc' = ⋃ i : I, RegLangOf (M i) (acc i) := by
+  use (AutomatonSigma M)
+  let acc' : Set (AutomatonSigma.{u, u, max u v} M).State := ⋃ i : I, acc i
+
   sorry
 
 theorem omega_reg_lang_union [h : Fintype I] :

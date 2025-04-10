@@ -20,9 +20,21 @@
 import Mathlib.Data.Set.Card
 import Mathlib.Data.Sigma.Basic
 
+universe u v w
+
 class C where
   T : Type*
   s : Set T
+
+def C_sigma {I : Type*} (F : I → C) : C where
+  T := Σ i : I, (F i).T
+  s := ⋃ i : I, Sigma.mk i '' (F i).s
+
+example (I : Type u) (F : I → C.{v}) :
+    ∃ G : C.{max u v}, G = G := by
+  use (C_sigma F)
+  sorry
+
 
 example (I : Type*) (F : I → C) (i : I) (x : (F i).T)
     (h : ⟨i, x⟩ ∈ ⋃ i, Sigma.mk i '' (F i).s) : x ∈ (F i).s := by

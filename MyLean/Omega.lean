@@ -68,11 +68,11 @@ def OmegaRegLangOf (M : Automaton A) (acc : Set M.State) : Set (ℕ → A) :=
 
 end Automaton
 
-section AutomatonSigma
+section AutomatonSum
 
 variable {A I : Type*}
 
-def AutomatonSigma (M : I → Automaton A) : Automaton A where
+def AutomatonSum (M : I → Automaton A) : Automaton A where
   State := Σ i : I, (M i).State
   init := ⋃ i : I, Sigma.mk i '' (M i).init
   next := fun ⟨i, s⟩ a ↦ Sigma.mk i '' (M i).next s a
@@ -80,18 +80,18 @@ def AutomatonSigma (M : I → Automaton A) : Automaton A where
 variable (M : I → Automaton A)
 
 theorem automaton_sigma_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → Σ i : I, (M i).State) :
-    FinRun (AutomatonSigma M) n as ss ↔ ∃ i ss_i, FinRun (M i) n as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
+    FinRun (AutomatonSum M) n as ss ↔ ∃ i ss_i, FinRun (M i) n as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
   constructor
   · rintro ⟨h_init, h_next⟩
     have := h_init
-    simp [AutomatonSigma, Automaton.init] at this
+    simp [AutomatonSum, Automaton.init] at this
     rcases this with ⟨i, s0, h_s0_init, h_s0_ss⟩
     have h_ss_exists : ∀ k : Fin (n + 1), ∃ sk : (M i).State, ss k = Sigma.mk i sk := by
       intro k ; induction' k using Fin.induction with k h_k
       · use s0 ; rw [h_s0_ss]
       rcases h_k with ⟨sk, h_sk⟩
       have h_next_k := h_next k
-      simp [AutomatonSigma, h_sk] at h_next_k
+      simp [AutomatonSum, h_sk] at h_next_k
       rcases h_next_k with ⟨sk', h_sk'⟩
       use sk' ; simp [h_sk'.2]
     choose ss_i h_ss_i using h_ss_exists
@@ -99,7 +99,7 @@ theorem automaton_sigma_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) �
     constructor
     · constructor
       · rw [h_ss_i 0, Automaton.init] at h_init
-        simp [AutomatonSigma] at h_init
+        simp [AutomatonSum] at h_init
         obtain ⟨i, s', h_s', rfl, h_eq⟩ := h_init
         rw [heq_eq_eq] at h_eq
         rw [h_eq] at h_s'
@@ -107,11 +107,11 @@ theorem automaton_sigma_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) �
       · intro k
         have h_next_k := h_next k
         rw [h_ss_i k, h_ss_i (k + 1)] at h_next_k
-        simp [AutomatonSigma] at h_next_k
+        simp [AutomatonSum] at h_next_k
         simp ; assumption
     · ext k <;> rw [h_ss_i k] <;> simp
   · rintro ⟨i, ss_i, h_run, h_ss⟩
-    simp [h_ss, AutomatonSigma]
+    simp [h_ss, AutomatonSum]
     constructor
     · simp [Automaton.init]
       use i, (ss_i 0)
@@ -123,18 +123,18 @@ theorem automaton_sigma_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) �
       exact h_k
 
 theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).State) :
-    InfRun (AutomatonSigma M) as ss ↔ ∃ i ss_i, InfRun (M i) as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
+    InfRun (AutomatonSum M) as ss ↔ ∃ i ss_i, InfRun (M i) as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
   constructor
   · rintro ⟨h_init, h_next⟩
     have := h_init
-    simp [AutomatonSigma, Automaton.init] at this
+    simp [AutomatonSum, Automaton.init] at this
     rcases this with ⟨i, s0, h_s0_init, h_s0_ss⟩
     have h_ss_exists : ∀ k, ∃ sk : (M i).State, ss k = Sigma.mk i sk := by
       intro k ; induction' k with k h_k
       · use s0 ; rw [h_s0_ss]
       rcases h_k with ⟨sk, h_sk⟩
       have h_next_k := h_next k
-      simp [AutomatonSigma, h_sk] at h_next_k
+      simp [AutomatonSum, h_sk] at h_next_k
       rcases h_next_k with ⟨sk', h_sk'⟩
       use sk' ; simp [h_sk'.2]
     choose ss_i h_ss_i using h_ss_exists
@@ -142,7 +142,7 @@ theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).S
     constructor
     · constructor
       · rw [h_ss_i 0, Automaton.init] at h_init
-        simp [AutomatonSigma] at h_init
+        simp [AutomatonSum] at h_init
         obtain ⟨i, s', h_s', rfl, h_eq⟩ := h_init
         rw [heq_eq_eq] at h_eq
         rw [h_eq] at h_s'
@@ -150,11 +150,11 @@ theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).S
       · intro k
         have h_next_k := h_next k
         rw [h_ss_i k, h_ss_i (k + 1)] at h_next_k
-        simp [AutomatonSigma] at h_next_k
+        simp [AutomatonSum] at h_next_k
         assumption
     · ext k <;> rw [h_ss_i k] <;> simp
   · rintro ⟨i, ss_i, h_run, h_ss⟩
-    simp [h_ss, AutomatonSigma]
+    simp [h_ss, AutomatonSum]
     constructor
     · simp [Automaton.init]
       use i, (ss_i 0)
@@ -163,7 +163,7 @@ theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).S
       simp [Automaton.next]
       exact h_run.2 k
 
-end AutomatonSigma
+end AutomatonSum
 
 section RegLangUnion
 
@@ -175,7 +175,7 @@ variable (acc : (i : I) → Set ((M i).State))
 theorem reg_lang_union :
     ∃ M' : Automaton.{u, max u v} A, ∃ acc' : Set (M'.State),
     RegLangOf M' acc' = ⋃ i : I, RegLangOf (M i) (acc i) := by
-  use (AutomatonSigma M)
+  use (AutomatonSum M)
   use { s | ∃ i : I, ∃ si ∈ acc i, s = Sigma.mk i si }
   ext al ; simp [RegLangOf, FinAccept]
   constructor
@@ -207,33 +207,21 @@ theorem reg_lang_union :
 theorem omega_reg_lang_union [h : Fintype I] :
     ∃ M' : Automaton.{u, max u v} A, ∃ acc' : Set (M'.State),
     OmegaRegLangOf M' acc' = ⋃ i : I, OmegaRegLangOf (M i) (acc i) := by
-  use (AutomatonSigma M)
+  use (AutomatonSum M)
   use { s | ∃ i : I, ∃ si ∈ acc i, s = Sigma.mk i si }
-  ext al ; simp [RegLangOf, FinAccept]
+  ext as ; simp [OmegaRegLangOf, BuchiAccept]
   constructor
-  · rintro ⟨n, as, ⟨ss, h_run, h_acc⟩, h_al⟩
-    obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sigma_fin_run M n as ss).mp h_run
-    use i, n, as
+  · rintro ⟨ss, h_run, h_inf⟩
+    obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sigma_inf_run M as ss).mp h_run
+    use i, ss_i
     constructor
-    · use ss_i
-      constructor
-      · assumption
-      obtain ⟨i', si', h_si', h_last⟩ := h_acc
-      simp [h_ss_i] at h_last
-      rw [Sigma.mk.inj_iff] at h_last
-      obtain ⟨rfl, h_si'_eq⟩ := h_last
-      rw [heq_eq_eq] at h_si'_eq
-      rw [h_si'_eq] ; assumption
     · assumption
-  · rintro ⟨i, n, as, ⟨ss_i, h_run, h_last⟩, h_al⟩
-    use n, as
+    · sorry
+  · rintro ⟨i, ss_i, h_run_i, h_inf_i⟩
+    use ((Sigma.mk i) ∘ ss_i)
     constructor
-    · use ((Sigma.mk i) ∘ ss_i)
-      constructor
-      · apply (automaton_sigma_fin_run M n as ((Sigma.mk i) ∘ ss_i)).mpr
-        use i, ss_i
-      · use i, ss_i (Fin.last n)
-        simp ; assumption
-    · assumption
+    · apply (automaton_sigma_inf_run M as ((Sigma.mk i) ∘ ss_i)).mpr
+      use i, ss_i
+    · sorry
 
 end RegLangUnion

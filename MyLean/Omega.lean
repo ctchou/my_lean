@@ -172,11 +172,11 @@ section RegLangUnion
 
 universe u v w
 
-variable {A I : Type u} (M : I → Automaton.{u, v} A)
+variable {I : Type u} {A : Type v} (M : I → Automaton.{v, w} A)
 variable (acc : (i : I) → Set ((M i).State))
 
 theorem reg_lang_union :
-    ∃ M' : Automaton.{u, max u v} A, ∃ acc' : Set (M'.State),
+    ∃ M' : Automaton.{v, max u w} A, ∃ acc' : Set (M'.State),
     RegLangOf M' acc' = ⋃ i : I, RegLangOf (M i) (acc i) := by
   use (AutomatonSum M)
   use { s | ∃ i : I, ∃ si ∈ acc i, s = Sigma.mk i si }
@@ -207,7 +207,7 @@ theorem reg_lang_union :
         simp ; assumption
     · assumption
 
-theorem omega_reg_lang_union [h : Fintype I] :
+theorem omega_reg_lang_union :
     ∃ M' : Automaton.{u, max u v} A, ∃ acc' : Set (M'.State),
     OmegaRegLangOf M' acc' = ⋃ i : I, OmegaRegLangOf (M i) (acc i) := by
   use (AutomatonSum M)
@@ -263,7 +263,8 @@ theorem omega_reg_lang_union [h : Fintype I] :
       h_si_acc : si ∈ acc i
       ⊢ ⟨i, si⟩ ∈ InfOcc (Sigma.mk i ∘ ss_i)
       -/
-      · sorry
+      · have hhh := inf_occ_map (Sigma.mk i : (M i).State → (AutomatonSum M).State) ss_i si h_si_inf
+        sorry
       · use i, si
 
 end  RegLangUnion

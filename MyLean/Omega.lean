@@ -216,12 +216,48 @@ theorem omega_reg_lang_union [h : Fintype I] :
     use i, ss_i
     constructor
     · assumption
-    · sorry
+    /-
+    case h.right
+    A I : Type u
+    M : I → Automaton A
+    acc : (i : I) → Set (Automaton.State A)
+    h : Fintype I
+    as : ℕ → A
+    ss : ℕ → Automaton.State A
+    h_run : InfRun (AutomatonSum M) as ss
+    h_inf : ¬InfOcc ss ∩ {s | ∃ i, ∃ si ∈ acc i, s = ⟨i, si⟩} = ∅
+    i : I
+    ss_i : ℕ → Automaton.State A
+    h_run_i : InfRun (M i) as ss_i
+    h_ss_i : ss = Sigma.mk i ∘ ss_i
+    ⊢ ¬InfOcc ss_i ∩ acc i = ∅
+    -/
+    · obtain ⟨s, h_s⟩ := nonempty_iff_ne_empty.mpr h_inf
+      simp [h_ss_i] at h_s
+      sorry
   · rintro ⟨i, ss_i, h_run_i, h_inf_i⟩
     use ((Sigma.mk i) ∘ ss_i)
     constructor
     · apply (automaton_sigma_inf_run M as ((Sigma.mk i) ∘ ss_i)).mpr
       use i, ss_i
-    · sorry
+    /-
+    case h.right
+    A I : Type u
+    M : I → Automaton A
+    acc : (i : I) → Set (Automaton.State A)
+    h : Fintype I
+    as : ℕ → A
+    i : I
+    ss_i : ℕ → Automaton.State A
+    h_run_i : InfRun (M i) as ss_i
+    h_inf_i : ¬InfOcc ss_i ∩ acc i = ∅
+    ⊢ ¬InfOcc (Sigma.mk i ∘ ss_i) ∩ {s | ∃ i, ∃ si ∈ acc i, s = ⟨i, si⟩} = ∅
+    -/
+    · obtain ⟨si, h_si_inf, h_si_acc⟩ := nonempty_iff_ne_empty.mpr h_inf_i
+      apply nonempty_iff_ne_empty.mp
+      use ⟨i, si⟩ ; simp
+      constructor
+      · sorry
+      · use i, si
 
-end RegLangUnion
+end  RegLangUnion

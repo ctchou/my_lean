@@ -22,6 +22,9 @@ def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
 def InfOcc {X : Type*} (xs : ℕ → X) : Set X :=
   { s : X | ∃ᶠ i in atTop, xs i = s }
 
+theorem inf_occ_map {X Y : Type*} (f : X → Y) (xs : ℕ → X) (x : X) (h : x ∈ InfOcc xs) : f x ∈ InfOcc (f ∘ xs) := by
+  sorry
+
 end Sequence
 
 section Automaton
@@ -240,23 +243,26 @@ theorem omega_reg_lang_union [h : Fintype I] :
     constructor
     · apply (automaton_sigma_inf_run M as ((Sigma.mk i) ∘ ss_i)).mpr
       use i, ss_i
-    /-
-    case h.right
-    A I : Type u
-    M : I → Automaton A
-    acc : (i : I) → Set (Automaton.State A)
-    h : Fintype I
-    as : ℕ → A
-    i : I
-    ss_i : ℕ → Automaton.State A
-    h_run_i : InfRun (M i) as ss_i
-    h_inf_i : ¬InfOcc ss_i ∩ acc i = ∅
-    ⊢ ¬InfOcc (Sigma.mk i ∘ ss_i) ∩ {s | ∃ i, ∃ si ∈ acc i, s = ⟨i, si⟩} = ∅
-    -/
     · obtain ⟨si, h_si_inf, h_si_acc⟩ := nonempty_iff_ne_empty.mpr h_inf_i
       apply nonempty_iff_ne_empty.mp
       use ⟨i, si⟩ ; simp
       constructor
+      /-
+      case h.left
+      A I : Type u
+      M : I → Automaton A
+      acc : (i : I) → Set (Automaton.State A)
+      h : Fintype I
+      as : ℕ → A
+      i : I
+      ss_i : ℕ → Automaton.State A
+      h_run_i : InfRun (M i) as ss_i
+      h_inf_i : ¬InfOcc ss_i ∩ acc i = ∅
+      si : Automaton.State A
+      h_si_inf : si ∈ InfOcc ss_i
+      h_si_acc : si ∈ acc i
+      ⊢ ⟨i, si⟩ ∈ InfOcc (Sigma.mk i ∘ ss_i)
+      -/
       · sorry
       · use i, si
 

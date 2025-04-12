@@ -178,8 +178,7 @@ variable (acc : (i : I) → Set ((M i).State))
 theorem reg_lang_union :
     ∃ M' : Automaton.{v, max u w} A, ∃ acc' : Set (M'.State),
     RegLangOf M' acc' = ⋃ i : I, RegLangOf (M i) (acc i) := by
-  use (AutomatonSum M)
-  use { s | ∃ i : I, ∃ si ∈ acc i, s = Sigma.mk i si }
+  use (AutomatonSum M), (⋃ i : I, Sigma.mk i '' acc i)
   ext al ; simp [RegLangOf, FinAccept]
   constructor
   · rintro ⟨n, as, ⟨ss, h_run, h_acc⟩, h_al⟩
@@ -194,7 +193,7 @@ theorem reg_lang_union :
       rw [Sigma.mk.inj_iff] at h_last
       obtain ⟨rfl, h_si'_eq⟩ := h_last
       rw [heq_eq_eq] at h_si'_eq
-      rw [h_si'_eq] ; assumption
+      rw [← h_si'_eq] ; assumption
     · assumption
   · rintro ⟨i, n, as, ⟨ss_i, h_run, h_last⟩, h_al⟩
     use n, as
@@ -208,10 +207,9 @@ theorem reg_lang_union :
     · assumption
 
 theorem omega_reg_lang_union :
-    ∃ M' : Automaton.{u, max u v} A, ∃ acc' : Set (M'.State),
+    ∃ M' : Automaton.{v, max u w} A, ∃ acc' : Set (M'.State),
     OmegaRegLangOf M' acc' = ⋃ i : I, OmegaRegLangOf (M i) (acc i) := by
-  use (AutomatonSum M)
-  use { s | ∃ i : I, ∃ si ∈ acc i, s = Sigma.mk i si }
+  use (AutomatonSum M), (⋃ i : I, Sigma.mk i '' acc i)
   ext as ; simp [OmegaRegLangOf, BuchiAccept]
   constructor
   · rintro ⟨ss, h_run, h_inf⟩
@@ -237,6 +235,7 @@ theorem omega_reg_lang_union :
     -/
     · obtain ⟨s, h_s⟩ := nonempty_iff_ne_empty.mpr h_inf
       simp [h_ss_i] at h_s
+      obtain ⟨h_s_inf, i', si', h_si'_acc, h_si'_eq_⟩ := h_s
       sorry
   · rintro ⟨i, ss_i, h_run_i, h_inf_i⟩
     use ((Sigma.mk i) ∘ ss_i)
@@ -247,24 +246,7 @@ theorem omega_reg_lang_union :
       apply nonempty_iff_ne_empty.mp
       use ⟨i, si⟩ ; simp
       constructor
-      /-
-      case h.left
-      A I : Type u
-      M : I → Automaton A
-      acc : (i : I) → Set (Automaton.State A)
-      h : Fintype I
-      as : ℕ → A
-      i : I
-      ss_i : ℕ → Automaton.State A
-      h_run_i : InfRun (M i) as ss_i
-      h_inf_i : ¬InfOcc ss_i ∩ acc i = ∅
-      si : Automaton.State A
-      h_si_inf : si ∈ InfOcc ss_i
-      h_si_acc : si ∈ acc i
-      ⊢ ⟨i, si⟩ ∈ InfOcc (Sigma.mk i ∘ ss_i)
-      -/
-      · have hhh := inf_occ_map (Sigma.mk i : (M i).State → (AutomatonSum M).State) ss_i si h_si_inf
-        sorry
+      · apply inf_occ_map ; assumption
       · use i, si
 
 end  RegLangUnion

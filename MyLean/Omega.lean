@@ -90,7 +90,7 @@ end Automaton
 
 section AutomatonSum
 
-variable {A I : Type*}
+variable {I A : Type*}
 
 def AutomatonSum (M : I → Automaton A) : Automaton A where
   State := Σ i : I, (M i).State
@@ -99,7 +99,7 @@ def AutomatonSum (M : I → Automaton A) : Automaton A where
 
 variable (M : I → Automaton A)
 
-theorem automaton_sigma_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → Σ i : I, (M i).State) :
+theorem automaton_sum_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → (AutomatonSum M).State) :
     FinRun (AutomatonSum M) n as ss ↔ ∃ i ss_i, FinRun (M i) n as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
   constructor
   · rintro ⟨h_init, h_next⟩
@@ -129,7 +129,7 @@ theorem automaton_sigma_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) �
         rw [h_ss_i k, h_ss_i (k + 1)] at h_next_k
         simp [AutomatonSum] at h_next_k
         simp ; assumption
-    · ext k <;> rw [h_ss_i k] <;> simp
+    · ext k ; rw [h_ss_i k] ; simp
   · rintro ⟨i, ss_i, h_run, h_ss⟩
     simp [h_ss, AutomatonSum]
     constructor
@@ -142,7 +142,7 @@ theorem automaton_sigma_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) �
       simp at h_k
       exact h_k
 
-theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).State) :
+theorem automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (AutomatonSum M).State) :
     InfRun (AutomatonSum M) as ss ↔ ∃ i ss_i, InfRun (M i) as ss_i ∧ ss = (Sigma.mk i) ∘ ss_i := by
   constructor
   · rintro ⟨h_init, h_next⟩
@@ -172,7 +172,7 @@ theorem automaton_sigma_inf_run (as : ℕ → A) (ss : ℕ → Σ i : I, (M i).S
         rw [h_ss_i k, h_ss_i (k + 1)] at h_next_k
         simp [AutomatonSum] at h_next_k
         assumption
-    · ext k <;> rw [h_ss_i k] <;> simp
+    · ext k ; rw [h_ss_i k] ; simp
   · rintro ⟨i, ss_i, h_run, h_ss⟩
     simp [h_ss, AutomatonSum]
     constructor
@@ -199,7 +199,7 @@ theorem reg_lang_union :
   ext al ; simp [RegLangOf, FinAccept]
   constructor
   · rintro ⟨n, as, ⟨ss, h_run, h_acc⟩, h_al⟩
-    obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sigma_fin_run M n as ss).mp h_run
+    obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sum_fin_run M n as ss).mp h_run
     use i, n, as
     constructor
     · use ss_i
@@ -217,7 +217,7 @@ theorem reg_lang_union :
     constructor
     · use ((Sigma.mk i) ∘ ss_i)
       constructor
-      · apply (automaton_sigma_fin_run M n as ((Sigma.mk i) ∘ ss_i)).mpr
+      · apply (automaton_sum_fin_run M n as ((Sigma.mk i) ∘ ss_i)).mpr
         use i, ss_i
       · use i, ss_i (Fin.last n)
         simp ; assumption
@@ -230,7 +230,7 @@ theorem omega_reg_lang_union :
   ext as ; simp [OmegaRegLangOf, BuchiAccept]
   constructor
   · rintro ⟨ss, h_run, h_inf⟩
-    obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sigma_inf_run M as ss).mp h_run
+    obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sum_inf_run M as ss).mp h_run
     use i, ss_i
     constructor
     · assumption
@@ -252,7 +252,7 @@ theorem omega_reg_lang_union :
   · rintro ⟨i, ss_i, h_run_i, h_inf_i⟩
     use ((Sigma.mk i) ∘ ss_i)
     constructor
-    · apply (automaton_sigma_inf_run M as ((Sigma.mk i) ∘ ss_i)).mpr
+    · apply (automaton_sum_inf_run M as ((Sigma.mk i) ∘ ss_i)).mpr
       use i, ss_i
     · obtain ⟨si, h_si_inf, h_si_acc⟩ := nonempty_iff_ne_empty.mpr h_inf_i
       apply nonempty_iff_ne_empty.mp
@@ -262,3 +262,24 @@ theorem omega_reg_lang_union :
       · use i, si
 
 end  RegLangUnion
+
+section AutomatonProd
+
+variable {I A : Type*}
+
+def AutomatonProd (M : I → Automaton A) : Automaton A where
+  State := Π i : I, (M i).State
+  init := { s | ∀ i : I, (s i) ∈ (M i).init }
+  next := fun s a ↦ { s' | ∀ i : I, (s' i) ∈ (M i).next (s i) a }
+
+variable (M : I → Automaton A)
+
+theorem automaton_prod_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → (AutomatonProd M).State) :
+    FinRun (AutomatonProd M) n as ss ↔ ∀ i, FinRun (M i) n as (fun k ↦ ss k i) := by
+  sorry
+
+theorem automaton_prod_inf_run (as : ℕ → A) (ss : ℕ → (AutomatonProd M).State) :
+    InfRun (AutomatonProd M) as ss ↔ ∀ i, InfRun (M i) as (fun k ↦ ss k i) := by
+  sorry
+
+end AutomatonProd

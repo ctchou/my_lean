@@ -122,13 +122,12 @@ theorem automaton_sum_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) →
         simp [AutomatonSum] at h_init
         obtain ⟨i, s', h_s', rfl, h_eq⟩ := h_init
         rw [heq_eq_eq] at h_eq
-        rw [h_eq] at h_s'
-        assumption
+        rwa [h_eq] at h_s'
       · intro k
         have h_next_k := h_next k
         rw [h_ss_i k, h_ss_i (k + 1)] at h_next_k
         simp [AutomatonSum] at h_next_k
-        simp ; assumption
+        simpa
     · ext k ; rw [h_ss_i k] ; simp
   · rintro ⟨i, ss_i, h_run, h_ss⟩
     simp [h_ss, AutomatonSum]
@@ -165,8 +164,7 @@ theorem automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (AutomatonSum M).St
         simp [AutomatonSum] at h_init
         obtain ⟨i, s', h_s', rfl, h_eq⟩ := h_init
         rw [heq_eq_eq] at h_eq
-        rw [h_eq] at h_s'
-        assumption
+        rwa [h_eq] at h_s'
       · intro k
         have h_next_k := h_next k
         rw [h_ss_i k, h_ss_i (k + 1)] at h_next_k
@@ -210,7 +208,7 @@ theorem reg_lang_union :
       rw [Sigma.mk.inj_iff] at h_last
       obtain ⟨rfl, h_si'_eq⟩ := h_last
       rw [heq_eq_eq] at h_si'_eq
-      rw [← h_si'_eq] ; assumption
+      simpa [← h_si'_eq]
     · assumption
   · rintro ⟨i, n, as, ⟨ss_i, h_run, h_last⟩, h_al⟩
     use n, as
@@ -220,7 +218,7 @@ theorem reg_lang_union :
       · apply (automaton_sum_fin_run M n as ((Sigma.mk i) ∘ ss_i)).mpr
         use i, ss_i
       · use i, ss_i (Fin.last n)
-        simp ; assumption
+        simpa
     · assumption
 
 theorem omega_reg_lang_union :
@@ -299,3 +297,54 @@ theorem automaton_prod_inf_run (as : ℕ → A) (ss : ℕ → (AutomatonProd M).
     · intro k i ; exact (h_all i).2 k
 
 end AutomatonProd
+
+section RegLangInter
+
+universe u v w
+
+variable {I : Type u} {A : Type v} (M : I → Automaton.{v, w} A)
+variable (acc : (i : I) → Set ((M i).State))
+
+theorem reg_lang_inter :
+    ∃ M' : Automaton.{v, max u w} A, ∃ acc' : Set (M'.State),
+    RegLangOf M' acc' = ⋂ i : I, RegLangOf (M i) (acc i) := by
+  use (AutomatonProd M), { s | ∀ i, (s i) ∈ (acc i) }
+  ext al ; simp [RegLangOf, FinAccept]
+  constructor
+  · rintro ⟨n, as, ⟨ss, h_run, h_acc⟩, h_al⟩ i
+    use n, as ; simp [h_al]
+    use (fun k ↦ ss k i)
+    constructor
+    · exact (automaton_prod_fin_run M n as ss).mp h_run i
+    · exact h_acc i
+  · intro h_all
+    use al.length, (fun k ↦ al[k])
+    simp
+    have h_all' : ∀ i, ∃ ss_i, FinRun (M i) al.length (fun k ↦ al[k]) ss_i ∧ ss_i (Fin.last al.length) ∈ acc i := by
+      sorry
+    choose ss_i h_ss_i using h_all'
+    use (fun k i ↦ ss_i i k)
+    constructor
+    · apply (automaton_prod_fin_run M al.length (fun k ↦ al[k]) (fun k i ↦ ss_i i k)).mpr
+      intro i
+      exact (h_ss_i i).1
+    · intro i
+      exact (h_ss_i i).2
+
+
+      -- choose i_len i_al h_run h_al using h_all
+      -- choose ss_i h_ss using h_run
+      -- have h_len : ∀ i, i_len i = al.length := by
+      --   sorry
+      -- use (fun k i ↦ ss_i i k)
+      -- constructor
+      -- · apply (automaton_prod_fin_run M al.length (fun k ↦ al[k]) (fun k i ↦ ss_i i k)).mpr
+      --   intro i
+      --   have h_run := (h_ss i).1
+      --   sorry
+      -- · intro i
+      --   simp [← h_len i]
+      --   exact (h_ss i).2
+
+
+end RegLangInter

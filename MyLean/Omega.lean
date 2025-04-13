@@ -20,19 +20,27 @@ def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
   fun i ↦ if h : i < xl.length then xl[i] else xs (i - xl.length)
 
 def InfOcc {X : Type*} (xs : ℕ → X) : Set X :=
-  { s : X | ∃ᶠ i in atTop, xs i = s }
+  { x : X | ∃ᶠ i in atTop, xs i = x }
 
 theorem inf_occ_index {X : Type*} {xs : ℕ → X} {x : X}
-    (h : x ∈ InfOcc xs) : ∃ k, x = xs k := by
-  sorry
+    (h : x ∈ InfOcc xs) : ∃ k, xs k = x := by
+  exact Frequently.exists h
 
-theorem inf_occ_map {X Y : Type*} {f : X → Y} {xs : ℕ → X} {x : X}
+theorem inf_occ_map {X Y : Type*} {xs : ℕ → X} {x : X} {f : X → Y}
     (h : x ∈ InfOcc xs) : f x ∈ InfOcc (f ∘ xs) := by
-  sorry
+  let p k := xs k = x
+  let q k := (f ∘ xs) k = f x
+  have hpq : ∀ k, p k → q k := by
+    simp [p, q] ; intro k h_p ; rw [h_p]
+  exact Frequently.mono h hpq
 
 theorem inf_occ_map_rev {X Y : Type*} {xs : ℕ → X} {x : X} (f : X → Y)
     (hi : f.Injective) (h : f x ∈ InfOcc (f ∘ xs)) : (x ∈ InfOcc xs) := by
-  sorry
+  let p k := (f ∘ xs) k = f x
+  let q k := xs k = x
+  have hpq : ∀ k, p k → q k := by
+    simp [p, q] ; intro k h_p ; exact hi h_p
+  exact Frequently.mono h hpq
 
 end Sequence
 
@@ -230,14 +238,14 @@ theorem omega_reg_lang_union :
       simp [h_ss_i] at h_s
       obtain ⟨h_s_inf, i', si', h_si'_acc, h_si'_s⟩ := h_s
       have ⟨k, h_k⟩ := inf_occ_index h_s_inf
-      simp [h_k] at h_si'_s
+      simp [← h_k] at h_si'_s
       rw [Sigma.mk.inj_iff] at h_si'_s
       obtain ⟨rfl, h_si'_eq⟩ := h_si'_s
       rw [heq_eq_eq] at h_si'_eq
       apply nonempty_iff_ne_empty.mp
       use si' ; simp
       constructor
-      · rw [h_k, comp_apply, ← h_si'_eq] at h_s_inf
+      · rw [← h_k, comp_apply, ← h_si'_eq] at h_s_inf
         apply inf_occ_map_rev (Sigma.mk i') sigma_mk_injective
         assumption
       . assumption

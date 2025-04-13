@@ -276,10 +276,26 @@ variable (M : I → Automaton A)
 
 theorem automaton_prod_fin_run (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → (AutomatonProd M).State) :
     FinRun (AutomatonProd M) n as ss ↔ ∀ i, FinRun (M i) n as (fun k ↦ ss k i) := by
-  sorry
+  constructor
+  · rintro ⟨h_init, h_next⟩ i
+    constructor
+    · apply h_init
+    · intro k ; apply h_next
+  · intro h_all
+    constructor
+    · intro i ; exact (h_all i).1
+    · intro k i ;  exact (h_all i).2 k
 
 theorem automaton_prod_inf_run (as : ℕ → A) (ss : ℕ → (AutomatonProd M).State) :
     InfRun (AutomatonProd M) as ss ↔ ∀ i, InfRun (M i) as (fun k ↦ ss k i) := by
-  sorry
+  constructor
+  · rintro ⟨h_init, h_next⟩ i
+    constructor
+    · apply h_init
+    · intro k ; apply h_next
+  · intro h_all
+    constructor
+    · intro i ; exact (h_all i).1
+    · intro k i ; exact (h_all i).2 k
 
 end AutomatonProd

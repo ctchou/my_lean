@@ -80,10 +80,10 @@ def RabinAccept (M : Automaton A) (accPairs : Set (Set M.State × Set M.State)) 
 def StreettAccept (M : Automaton A) (accPairs : Set (Set M.State × Set M.State)) (as : ℕ → A) :=
   ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∀ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ → InfOcc ss ∩ pair.2 ≠ ∅
 
-def RegLangOf (M : Automaton A) (acc : Set M.State) : Set (List A) :=
+def AcceptedLang (M : Automaton A) (acc : Set M.State) : Set (List A) :=
   { al | ∃ n as, FinAccept M acc n as ∧ al = List.ofFn as }
 
-def OmegaRegLangOf (M : Automaton A) (acc : Set M.State) : Set (ℕ → A) :=
+def AcceptedOmegaLang (M : Automaton A) (acc : Set M.State) : Set (ℕ → A) :=
   { as | BuchiAccept M acc as }
 
 end Automaton
@@ -183,18 +183,18 @@ theorem automaton_sum_inf_run (as : ℕ → A) (ss : ℕ → (AutomatonSum M).St
 
 end AutomatonSum
 
-section RegLangUnion
+section AcceptedLangUnion
 
 universe u v w
 
 variable {I : Type u} {A : Type v} (M : I → Automaton.{v, w} A)
 variable (acc : (i : I) → Set ((M i).State))
 
-theorem reg_lang_union :
+theorem accepted_lang_union :
     ∃ M' : Automaton.{v, max u w} A, ∃ acc' : Set (M'.State),
-    RegLangOf M' acc' = ⋃ i : I, RegLangOf (M i) (acc i) := by
+    AcceptedLang M' acc' = ⋃ i : I, AcceptedLang (M i) (acc i) := by
   use (AutomatonSum M), (⋃ i : I, Sigma.mk i '' acc i)
-  ext al ; simp [RegLangOf, FinAccept]
+  ext al ; simp [AcceptedLang, FinAccept]
   constructor
   · rintro ⟨n, as, ⟨ss, h_run, h_acc⟩, h_al⟩
     obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sum_fin_run M n as ss).mp h_run
@@ -221,11 +221,11 @@ theorem reg_lang_union :
         simpa
     · assumption
 
-theorem omega_reg_lang_union :
+theorem accepted_omega_lang_union :
     ∃ M' : Automaton.{v, max u w} A, ∃ acc' : Set (M'.State),
-    OmegaRegLangOf M' acc' = ⋃ i : I, OmegaRegLangOf (M i) (acc i) := by
+    AcceptedOmegaLang M' acc' = ⋃ i : I, AcceptedOmegaLang (M i) (acc i) := by
   use (AutomatonSum M), (⋃ i : I, Sigma.mk i '' acc i)
-  ext as ; simp [OmegaRegLangOf, BuchiAccept]
+  ext as ; simp [AcceptedOmegaLang, BuchiAccept]
   constructor
   · rintro ⟨ss, h_run, h_inf⟩
     obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sum_inf_run M as ss).mp h_run
@@ -259,7 +259,7 @@ theorem omega_reg_lang_union :
       · apply inf_occ_map ; assumption
       · use i, si
 
-end  RegLangUnion
+end  AcceptedLangUnion
 
 section AutomatonProd
 
@@ -298,18 +298,18 @@ theorem automaton_prod_inf_run (as : ℕ → A) (ss : ℕ → (AutomatonProd M).
 
 end AutomatonProd
 
-section RegLangInter
+section AcceptedLangInter
 
 universe u v w
 
 variable {I : Type u} {A : Type v} (M : I → Automaton.{v, w} A)
 variable (acc : (i : I) → Set ((M i).State))
 
-theorem reg_lang_inter :
+theorem accepted_lang_inter :
     ∃ M' : Automaton.{v, max u w} A, ∃ acc' : Set (M'.State),
-    RegLangOf M' acc' = ⋂ i : I, RegLangOf (M i) (acc i) := by
+    AcceptedLang M' acc' = ⋂ i : I, AcceptedLang (M i) (acc i) := by
   use (AutomatonProd M), { s | ∀ i, (s i) ∈ (acc i) }
-  ext al ; simp [RegLangOf, FinAccept]
+  ext al ; simp [AcceptedLang, FinAccept]
   constructor
   · rintro ⟨n, as, ⟨ss, h_run, h_acc⟩, h_al⟩ i
     use n, as ; simp [h_al]
@@ -342,4 +342,4 @@ theorem reg_lang_inter :
     · intro i
       exact (h_ss_i i).2
 
-end RegLangInter
+end AcceptedLangInter

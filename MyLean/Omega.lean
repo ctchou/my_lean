@@ -343,3 +343,24 @@ theorem accepted_lang_inter :
       exact (h_ss_i i).2
 
 end AcceptedLangInter
+
+section AutomatonHist
+
+variable {A H : Type*}
+
+def AutomatonHist (M : Automaton A) (hist_init : Set H) (hist_next : M.State × H → A → Set H) : Automaton A where
+  State := M.State × H
+  init := { s | s.1 ∈ M.init ∧ s.2 ∈ hist_init }
+  next := fun s a ↦ { s' | s'.1 ∈ M.next s.1 a ∧ s'.2 ∈ hist_next s a }
+
+variable (M : Automaton A) (hist_init : Set H) (hist_next : M.State × H → A → Set H)
+
+theorem automaton_hist_inf_run_proj (as : ℕ → A) (ss : ℕ → M.State × H) :
+    InfRun (AutomatonHist M hist_init hist_next) as ss → InfRun M as (Prod.fst ∘ ss) := by
+  sorry
+
+theorem automaton_hist_inf_run_exists (as : ℕ → A) (ss : ℕ → M.State) :
+    InfRun M as ss → ∃ hs : ℕ → H, InfRun (AutomatonHist M hist_init hist_next) as (fun k ↦ (ss k, hs k)) := by
+  sorry
+
+end AutomatonHist

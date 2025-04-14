@@ -357,7 +357,14 @@ variable (M : Automaton A) (hist_init : Set H) (hist_next : M.State × H → A �
 
 theorem automaton_hist_inf_run_proj (as : ℕ → A) (ss : ℕ → M.State × H) :
     InfRun (AutomatonHist M hist_init hist_next) as ss → InfRun M as (Prod.fst ∘ ss) := by
-  sorry
+  intro h ; constructor
+  · have h' := h.1
+    simp [AutomatonHist] at h'
+    exact h'.1
+  · intro k
+    have h' := h.2 k
+    simp [AutomatonHist] at h'
+    exact h'.1
 
 theorem automaton_hist_inf_run_exists (as : ℕ → A) (ss : ℕ → M.State) :
     InfRun M as ss → ∃ hs : ℕ → H, InfRun (AutomatonHist M hist_init hist_next) as (fun k ↦ (ss k, hs k)) := by

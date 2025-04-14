@@ -318,10 +318,21 @@ theorem reg_lang_inter :
     · exact (automaton_prod_fin_run M n as ss).mp h_run i
     · exact h_acc i
   · intro h_all
+    have h_all' : ∀ i, ∃ ss_i, FinRun (M i) al.length (fun k ↦ al[k]) ss_i ∧ ss_i (Fin.last al.length) ∈ acc i := by
+      intro i
+      obtain ⟨n, as, ⟨ss_i, h_run_i, h_acc_i⟩, h_al⟩ := h_all i
+      have h_n : n = al.length := by rw [h_al, List.length_ofFn]
+      obtain rfl := h_n
+      use ss_i
+      constructor
+      · have h_as : (fun k ↦ al[k]) = as := by
+          ext k
+          calc al[k] = (List.ofFn as)[k] := by congr
+                   _ = as k := by simp
+        rw [h_as] ; assumption
+      · assumption
     use al.length, (fun k ↦ al[k])
     simp
-    have h_all' : ∀ i, ∃ ss_i, FinRun (M i) al.length (fun k ↦ al[k]) ss_i ∧ ss_i (Fin.last al.length) ∈ acc i := by
-      sorry
     choose ss_i h_ss_i using h_all'
     use (fun k i ↦ ss_i i k)
     constructor
@@ -330,21 +341,5 @@ theorem reg_lang_inter :
       exact (h_ss_i i).1
     · intro i
       exact (h_ss_i i).2
-
-
-      -- choose i_len i_al h_run h_al using h_all
-      -- choose ss_i h_ss using h_run
-      -- have h_len : ∀ i, i_len i = al.length := by
-      --   sorry
-      -- use (fun k i ↦ ss_i i k)
-      -- constructor
-      -- · apply (automaton_prod_fin_run M al.length (fun k ↦ al[k]) (fun k i ↦ ss_i i k)).mpr
-      --   intro i
-      --   have h_run := (h_ss i).1
-      --   sorry
-      -- · intro i
-      --   simp [← h_len i]
-      --   exact (h_ss i).2
-
 
 end RegLangInter

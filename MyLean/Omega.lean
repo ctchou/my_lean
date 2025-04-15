@@ -366,8 +366,20 @@ theorem automaton_hist_inf_run_proj (as : ℕ → A) (ss : ℕ → M.State × H)
     simp [AutomatonHist] at h'
     exact h'.1
 
-theorem automaton_hist_inf_run_exists (as : ℕ → A) (ss : ℕ → M.State) :
+--private def
+
+theorem automaton_hist_inf_run_exists (as : ℕ → A) (ss : ℕ → M.State)
+    (h_init : Nonempty hist_init) (h_next : ∀ s a, (hist_next s a).Nonempty) :
     InfRun M as ss → ∃ hs : ℕ → H, InfRun (AutomatonHist M hist_init hist_next) as (fun k ↦ (ss k, hs k)) := by
-  sorry
+  intro h
+  obtain ⟨hs0, h_hs0⟩ := h_init
+  choose hs' h_hs' using h_next
+  let rec hs : ℕ → H
+    | 0 => hs0
+    | k + 1 => hs' (ss k, hs k) (as k)
+  use hs ; constructor
+  · simp [AutomatonHist]
+    sorry
+  · sorry
 
 end AutomatonHist

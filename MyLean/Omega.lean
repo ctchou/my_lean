@@ -388,16 +388,26 @@ end AutomatonHist
 
 section AcceptedOmegaLangInter
 
-variable {A : Type*} (M : Fin 2 → Automaton A)
+open Classical
+
+universe u v
+
+variable {A : Type u} (M : Fin 2 → Automaton.{u, v} A)
 variable (acc : (i : Fin 2) → Set ((M i).State))
 
-def AutomatonInter2 : Automaton A :=
+private def AutomatonInter2 : Automaton A :=
   AutomatonHist (AutomatonProd M) {(1 : Fin 2)}
-  ( fun (s, h) a ↦ if s 0 ∈ acc 0 ∧ h = 0 then {1} else if s 1 ∈ acc 1 ∧ h = 1 then {0} else {h} )
+  ( fun (s, h) _ ↦
+    if s 0 ∈ acc 0 ∧ h = 0 then {1} else
+    if s 1 ∈ acc 1 ∧ h = 1 then {0} else {h} )
+
+private def acc2 : Set ((AutomatonProd M).State × Fin 2) :=
+  { (s, h) | s 0 ∈ acc 0 ∧ h = 0 }
 
 theorem accepted_omega_lang_inter :
-    ∃ M' : Automaton A, ∃ acc' : Set (M'.State),
+    ∃ M' : Automaton.{u, max u (v + 1)} A, ∃ acc' : Set (M'.State),
     AcceptedLang M' acc' = ⋂ i : Fin 2, AcceptedLang (M i) (acc i) := by
+  use (AutomatonInter2 M acc), acc2
   sorry
 
 end AcceptedOmegaLangInter

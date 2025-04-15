@@ -15,3 +15,13 @@ def foo : ℕ → ℕ
 
 example : foo 0 = 1 := by
   simp [foo]
+
+namespace String
+
+theorem join_eq (ss : List String) : join ss = ⟨(ss.map data).flatten⟩ := by
+  let rec go : ∀ (ss : List String) cs, ss.foldl (· ++ ·) (mk cs) = ⟨cs ++ (ss.map data).flatten⟩
+    | [], _ => by simp
+    | ⟨s⟩::ss, _ => (go ss _).trans (by simp)
+  --exact go ss []
+  have h := go ss []
+  exact h

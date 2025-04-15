@@ -385,3 +385,19 @@ theorem automaton_hist_inf_run_exists (as : ℕ → A) (ss : ℕ → M.State)
     apply h_hs'
 
 end AutomatonHist
+
+section AcceptedOmegaLangInter
+
+variable {A : Type*} (M : Fin 2 → Automaton A)
+variable (acc : (i : Fin 2) → Set ((M i).State))
+
+def AutomatonInter2 : Automaton A :=
+  AutomatonHist (AutomatonProd M) {(1 : Fin 2)}
+  ( fun (s, h) a ↦ if s 0 ∈ acc 0 ∧ h = 0 then {1} else if s 1 ∈ acc 1 ∧ h = 1 then {0} else {h} )
+
+theorem accepted_omega_lang_inter :
+    ∃ M' : Automaton A, ∃ acc' : Set (M'.State),
+    AcceptedLang M' acc' = ⋂ i : Fin 2, AcceptedLang (M i) (acc i) := by
+  sorry
+
+end AcceptedOmegaLangInter

@@ -399,12 +399,12 @@ private def _HistInit2 : Set (Fin 2) := {1}
 
 private def _HistNext2 : (AutomatonProd M).State × Fin 2 → A → Set (Fin 2) :=
   fun (s, h) _ ↦
-    if s 0 ∈ acc 0 ∧ h = 0 then {1} else
-    if s 1 ∈ acc 1 ∧ h = 1 then {0} else {h}
+    if s 0 ∈ acc 0 ∧ h = 1 then {0} else
+    if s 1 ∈ acc 1 ∧ h = 0 then {1} else {h}
 
 private def _Inter2 : Automaton A := AutomatonHist (AutomatonProd M) _HistInit2 (_HistNext2 M acc)
 
-private def _Acc2 : Set (_Inter2 M acc).State := { (s, h) | s 0 ∈ acc 0 ∧ h = 0 }
+private def _Acc2 : Set (_Inter2 M acc).State := { (_, h) | h = 0 }
 
 theorem accepted_omega_lang_inter2 :
     ∃ M' : Automaton.{u, v} A, ∃ acc' : Set (M'.State),
@@ -426,8 +426,8 @@ theorem accepted_omega_lang_inter2 :
     have h_hist_init : _HistInit2.Nonempty := by simp [_HistInit2]
     have h_hist_next : ∀ s a, (_HistNext2 M acc s a).Nonempty := by
       intro s a ; simp only [_HistNext2]
-      rcases Classical.em (s.1 0 ∈ acc 0 ∧ s.2 = 0) with cond1 | cond1 <;> simp [cond1]
-      rcases Classical.em (s.1 1 ∈ acc 1 ∧ s.2 = 1) with cond2 | cond2 <;> simp [cond2]
+      rcases Classical.em (s.1 0 ∈ acc 0 ∧ s.2 = 1) with cond1 | cond1 <;> simp [cond1]
+      rcases Classical.em (s.1 1 ∈ acc 1 ∧ s.2 = 0) with cond2 | cond2 <;> simp [cond2]
     have h_runh := automaton_hist_inf_run_exists (AutomatonProd M) _HistInit2 (_HistNext2 M acc) as ss2
       h_hist_init h_hist_next h_run2
     obtain ⟨hs, h_run⟩ := h_runh

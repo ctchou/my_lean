@@ -188,10 +188,11 @@ section AcceptedLangUnion
 
 variable {I A : Type*} (M : I → Automaton A) (acc : (i : I) → Set ((M i).State))
 
+def AutomatonSum_Acc : Set (AutomatonSum M).State := ⋃ i : I, Sigma.mk i '' acc i
+
 theorem accepted_lang_union :
-    ∃ acc', AcceptedLang (AutomatonSum M) acc' = ⋃ i : I, AcceptedLang (M i) (acc i) := by
-  use (⋃ i : I, Sigma.mk i '' acc i)
-  ext al ; simp [AcceptedLang, FinAccept]
+    AcceptedLang (AutomatonSum M) (AutomatonSum_Acc M acc) = ⋃ i : I, AcceptedLang (M i) (acc i) := by
+  ext al ; simp [AutomatonSum_Acc, AcceptedLang, FinAccept]
   constructor
   · rintro ⟨n, as, ⟨ss, h_run, h_acc⟩, h_al⟩
     obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sum_fin_run M n as ss).mp h_run
@@ -219,9 +220,8 @@ theorem accepted_lang_union :
     · assumption
 
 theorem accepted_omega_lang_union :
-    ∃ acc', AcceptedOmegaLang (AutomatonSum M) acc' = ⋃ i : I, AcceptedOmegaLang (M i) (acc i) := by
-  use (⋃ i : I, Sigma.mk i '' acc i)
-  ext as ; simp [AcceptedOmegaLang, BuchiAccept]
+    AcceptedOmegaLang (AutomatonSum M) (AutomatonSum_Acc M acc) = ⋃ i : I, AcceptedOmegaLang (M i) (acc i) := by
+  ext as ; simp [AutomatonSum_Acc, AcceptedOmegaLang, BuchiAccept]
   constructor
   · rintro ⟨ss, h_run, h_inf⟩
     obtain ⟨i, ss_i, h_run_i, h_ss_i⟩ := (automaton_sum_inf_run M as ss).mp h_run
@@ -298,9 +298,10 @@ section AcceptedLangInter
 
 variable {I A : Type*} (M : I → Automaton A) (acc : (i : I) → Set ((M i).State))
 
+def AutomatonProd_Acc : Set (AutomatonProd M).State := { s | ∀ i, (s i) ∈ (acc i) }
+
 theorem accepted_lang_inter :
-    ∃ acc', AcceptedLang (AutomatonProd M) acc' = ⋂ i : I, AcceptedLang (M i) (acc i) := by
-  use { s | ∀ i, (s i) ∈ (acc i) }
+    AcceptedLang (AutomatonProd M) (AutomatonProd_Acc M acc) = ⋂ i : I, AcceptedLang (M i) (acc i) := by
   ext al ; simp [AcceptedLang, FinAccept]
   constructor
   · rintro ⟨n, as, ⟨ss, h_run, h_acc⟩, h_al⟩ i

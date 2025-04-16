@@ -395,20 +395,29 @@ universe u v
 variable {A : Type u} (M : Fin 2 → Automaton.{u, v} A)
 variable (acc : (i : Fin 2) → Set ((M i).State))
 
-private def _Inter2 : Automaton A :=
-  AutomatonHist (AutomatonProd M) {(1 : Fin 2)}
-  ( fun (s, h) _ ↦
-    if s 0 ∈ acc 0 ∧ h = 0 then {1} else
-    if s 1 ∈ acc 1 ∧ h = 1 then {0} else {h} )
+private def _HistInit2 : Set (Fin 2) := {1}
 
-private def _Acc2 : Set (_Inter2 M acc).State :=
-  { (s, h) | s 0 ∈ acc 0 ∧ h = 0 }
+private def _HistNext2 : (AutomatonProd M).State × Fin 2 → A → Set (Fin 2) :=
+  fun (s, h) _ ↦
+    if s 0 ∈ acc 0 ∧ h = 0 then {1} else
+    if s 1 ∈ acc 1 ∧ h = 1 then {0} else {h}
+
+private def _Inter2 : Automaton A := AutomatonHist (AutomatonProd M) _HistInit2 (_HistNext2 M acc)
+
+private def _Acc2 : Set (_Inter2 M acc).State := { (s, h) | s 0 ∈ acc 0 ∧ h = 0 }
 
 theorem accepted_omega_lang_inter2 :
     ∃ M' : Automaton.{u, v} A, ∃ acc' : Set (M'.State),
-    AcceptedLang M' acc' = ⋂ i : Fin 2, AcceptedLang (M i) (acc i) := by
-  use (_Inter2 M acc)
-  use (_Acc2 M acc)
-  sorry
+    AcceptedOmegaLang M' acc' = ⋂ i : Fin 2, AcceptedOmegaLang (M i) (acc i) := by
+  use (_Inter2 M acc), (_Acc2 M acc)
+  ext as ; simp [AcceptedOmegaLang, BuchiAccept]
+  constructor
+  · rintro ⟨ss, h_run, h_inf⟩ i
+    have h_run1 := automaton_hist_inf_run_proj (AutomatonProd M) _HistInit2 (_HistNext2 M acc) as ss h_run
+    have h_run2 := (automaton_prod_inf_run M as (Prod.fst ∘ ss)).mp h_run1 i
+    use (fun k ↦ (Prod.fst ∘ ss) k i) ; constructor
+    · assumption
+    sorry
+  · sorry
 
 end AcceptedOmegaLangInter2

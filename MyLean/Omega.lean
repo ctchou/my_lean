@@ -19,10 +19,10 @@ universe u v w
 section Sequence
 
 def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
-  fun i ↦ if h : i < xl.length then xl[i] else xs (i - xl.length)
+  fun k ↦ if h : k < xl.length then xl[k] else xs (k - xl.length)
 
 def InfOcc {X : Type*} (xs : ℕ → X) : Set X :=
-  { x : X | ∃ᶠ i in atTop, xs i = x }
+  { x : X | ∃ᶠ k in atTop, xs k = x }
 
 theorem inf_occ_index {X : Type*} {xs : ℕ → X} {x : X}
     (h : x ∈ InfOcc xs) : ∃ k, xs k = x := by
@@ -43,6 +43,19 @@ theorem inf_occ_map_rev {X Y : Type*} {xs : ℕ → X} {x : X} (f : X → Y)
   have hpq : ∀ k, p k → q k := by
     simp [p, q] ; intro k h_p ; exact hi h_p
   exact Frequently.mono h hpq
+
+theorem inf_occ_inter_nonempty {X : Type*} (xs : ℕ → X) (s : Set X) :
+    InfOcc xs ∩ s ≠ ∅ ↔ ∃ᶠ k in atTop, xs k ∈ s := by
+  rw [← nonempty_iff_ne_empty]
+  constructor
+  · rintro ⟨x, h_inf, h_s⟩
+    simp [InfOcc] at h_inf
+    let p k := xs k = x
+    let q k := xs k ∈ s
+    have h_p : ∃ᶠ k in atTop, p k := by assumption
+    have h_imp : ∀ k, p k → q k := by simp [p, q] ; intro k h ; simpa [h]
+    exact Frequently.mono h_p h_imp
+  . sorry
 
 end Sequence
 

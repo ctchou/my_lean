@@ -366,9 +366,9 @@ theorem automaton_hist_inf_run_proj (as : ℕ → A) (ss : ℕ → M.State × H)
     simp [AutomatonHist] at h'
     exact h'.1
 
-private def gen_hist (as : ℕ → A) (ss : ℕ → M.State) (hs0 : H) (hs' : M.State × H → A -> H) : ℕ → H
+private def _MakeHist (as : ℕ → A) (ss : ℕ → M.State) (hs0 : H) (hs' : M.State × H → A -> H) : ℕ → H
   | 0 => hs0
-  | k + 1 => hs' (ss k, gen_hist as ss hs0 hs' k) (as k)
+  | k + 1 => hs' (ss k, _MakeHist as ss hs0 hs' k) (as k)
 
 theorem automaton_hist_inf_run_exists (as : ℕ → A) (ss : ℕ → M.State)
     (h_init : Nonempty hist_init) (h_next : ∀ s a, (hist_next s a).Nonempty) :
@@ -376,17 +376,17 @@ theorem automaton_hist_inf_run_exists (as : ℕ → A) (ss : ℕ → M.State)
   intro h
   obtain ⟨hs0, h_hs0⟩ := h_init
   choose hs' h_hs' using h_next
-  let hs := gen_hist M as ss hs0 hs'
+  let hs := _MakeHist M as ss hs0 hs'
   use hs ; constructor
-  · simp [AutomatonHist, gen_hist, h.1, hs]
+  · simp [AutomatonHist, _MakeHist, h.1, hs]
     exact h_hs0
   · intro k
-    simp [AutomatonHist, gen_hist, hs, h.2 k]
+    simp [AutomatonHist, _MakeHist, hs, h.2 k]
     apply h_hs'
 
 end AutomatonHist
 
-section AcceptedOmegaLangInter
+section AcceptedOmegaLangInter2
 
 open Classical
 
@@ -395,19 +395,20 @@ universe u v
 variable {A : Type u} (M : Fin 2 → Automaton.{u, v} A)
 variable (acc : (i : Fin 2) → Set ((M i).State))
 
-private def AutomatonInter2 : Automaton A :=
+private def _Inter2 : Automaton A :=
   AutomatonHist (AutomatonProd M) {(1 : Fin 2)}
   ( fun (s, h) _ ↦
     if s 0 ∈ acc 0 ∧ h = 0 then {1} else
     if s 1 ∈ acc 1 ∧ h = 1 then {0} else {h} )
 
-private def acc2 : Set ((AutomatonProd M).State × Fin 2) :=
+private def _Acc2 : Set (_Inter2 M acc).State :=
   { (s, h) | s 0 ∈ acc 0 ∧ h = 0 }
 
-theorem accepted_omega_lang_inter :
-    ∃ M' : Automaton.{u, max u (v + 1)} A, ∃ acc' : Set (M'.State),
+theorem accepted_omega_lang_inter2 :
+    ∃ M' : Automaton.{u, v} A, ∃ acc' : Set (M'.State),
     AcceptedLang M' acc' = ⋂ i : Fin 2, AcceptedLang (M i) (acc i) := by
-  use (AutomatonInter2 M acc), acc2
+  use (_Inter2 M acc)
+  use (_Acc2 M acc)
   sorry
 
-end AcceptedOmegaLangInter
+end AcceptedOmegaLangInter2

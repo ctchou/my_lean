@@ -371,7 +371,7 @@ private def _MakeHist (as : ℕ → A) (ss : ℕ → M.State) (hs0 : H) (hs' : M
   | k + 1 => hs' (ss k, _MakeHist as ss hs0 hs' k) (as k)
 
 theorem automaton_hist_inf_run_exists (as : ℕ → A) (ss : ℕ → M.State)
-    (h_init : Nonempty hist_init) (h_next : ∀ s a, (hist_next s a).Nonempty) :
+    (h_init : hist_init.Nonempty) (h_next : ∀ s a, (hist_next s a).Nonempty) :
     InfRun M as ss → ∃ hs : ℕ → H, InfRun (AutomatonHist M hist_init hist_next) as (fun k ↦ (ss k, hs k)) := by
   intro h
   obtain ⟨hs0, h_hs0⟩ := h_init
@@ -418,6 +418,21 @@ theorem accepted_omega_lang_inter2 :
     use (fun k ↦ (Prod.fst ∘ ss) k i) ; constructor
     · assumption
     sorry
-  · sorry
+  · intro h_all
+    choose ss h_ss using h_all
+    let ss2 := fun k i ↦ ss i k
+    have h_ss2 : ∀ i, InfRun (M i) as (fun k ↦ ss2 k i) := by intro i ; exact (h_ss i).1
+    have h_run2 := (automaton_prod_inf_run M as ss2).mpr h_ss2
+    have h_hist_next : ∀ s a, (_HistNext2 M acc s a).Nonempty := by
+      intro s a ; simp only [_HistNext2]
+      rcases Classical.em (s.1 0 ∈ acc 0 ∧ s.2 = 0) with cond1 | cond1 <;> simp [cond1]
+      rcases Classical.em (s.1 1 ∈ acc 1 ∧ s.2 = 1) with cond2 | cond2 <;> simp [cond2]
+    have h_runh := automaton_hist_inf_run_exists (AutomatonProd M) _HistInit2 (_HistNext2 M acc) as ss2
+      (by simp [_HistInit2]) (by intro s a ; simp [_HistNext2]; sorry) h_run2
+    obtain ⟨hs, h_run⟩ := h_runh
+    use (fun k ↦ (ss2 k, hs k))
+    constructor
+    · assumption
+    sorry
 
 end AcceptedOmegaLangInter2

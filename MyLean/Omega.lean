@@ -14,6 +14,8 @@ import Mathlib.Order.Filter.ATTopBot.Basic
 
 open BigOperators Function Filter Set Sigma
 
+universe u v w
+
 section Sequence
 
 def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
@@ -51,19 +53,18 @@ class Automaton (A : Type*) where
   init : Set State
   next : State → A → Set State
 
-class DetAutomaton (A : Type*) extends Automaton A where
-  det_init : init.ncard = 1
-  det_next : ∀ s a, (next s a).ncard = 1
-
 variable {A : Type*}
 
+def IsFinite (M : Automaton A) : Prop := Finite A ∧ Finite M.State
+
+def Deterministic (M : Automaton A) : Prop :=
+  M.init.ncard = 1 ∧ ∀ s a, (M.next s a).ncard = 1
+
 def FinRun (M : Automaton A) (n : ℕ) (as : Fin n → A) (ss : Fin (n + 1) → M.State) :=
-  ss 0 ∈ M.init ∧
-  ∀ k : Fin n, ss (k + 1) ∈ M.next (ss k) (as k)
+  ss 0 ∈ M.init ∧ ∀ k : Fin n, ss (k + 1) ∈ M.next (ss k) (as k)
 
 def InfRun (M : Automaton A) (as : ℕ → A) (ss : ℕ → M.State) :=
-  ss 0 ∈ M.init ∧
-  ∀ k : ℕ, ss (k + 1) ∈ M.next (ss k) (as k)
+  ss 0 ∈ M.init ∧ ∀ k : ℕ, ss (k + 1) ∈ M.next (ss k) (as k)
 
 def FinAccept (M : Automaton A) (acc : Set M.State) (n : ℕ) (as : Fin n → A) :=
   ∃ ss : Fin (n + 1) → M.State, FinRun M n as ss ∧ ss n ∈ acc
@@ -185,8 +186,6 @@ end AutomatonSum
 
 section AcceptedLangUnion
 
-universe u v w
-
 variable {I : Type u} {A : Type v} (M : I → Automaton.{v, w} A)
 variable (acc : (i : I) → Set ((M i).State))
 
@@ -300,8 +299,6 @@ end AutomatonProd
 
 section AcceptedLangInter
 
-universe u v w
-
 variable {I : Type u} {A : Type v} (M : I → Automaton.{v, w} A)
 variable (acc : (i : I) → Set ((M i).State))
 
@@ -389,8 +386,6 @@ end AutomatonHist
 section AcceptedOmegaLangInter2
 
 open Classical
-
-universe u v
 
 variable {A : Type u} (M : Fin 2 → Automaton.{u, v} A)
 variable (acc : (i : Fin 2) → Set ((M i).State))

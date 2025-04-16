@@ -358,7 +358,7 @@ theorem automaton_hist_inf_run_proj (as : ℕ → A) (ss : ℕ → M.State × H)
     simp [AutomatonHist] at h'
     exact h'.1
 
-private def _MakeHist (as : ℕ → A) (ss : ℕ → M.State) (hs0 : H) (hs' : M.State × H → A -> H) : ℕ → H
+def _MakeHist (as : ℕ → A) (ss : ℕ → M.State) (hs0 : H) (hs' : M.State × H → A -> H) : ℕ → H
   | 0 => hs0
   | k + 1 => hs' (ss k, _MakeHist as ss hs0 hs' k) (as k)
 
@@ -382,28 +382,27 @@ section AcceptedOmegaLangInter2
 
 open Classical
 
-variable {A : Type u} (M : Fin 2 → Automaton.{u, v} A)
-variable (acc : (i : Fin 2) → Set ((M i).State))
+variable {A : Type*} (M : Fin 2 → Automaton A) (acc : (i : Fin 2) → Set ((M i).State))
 
-private def _HistInit2 : Set (Fin 2) := {1}
+def AutomatonInter2_HistInit : Set (Fin 2) := {1}
 
-private def _HistNext2 : (AutomatonProd M).State × Fin 2 → A → Set (Fin 2) :=
+def AutomatonInter2_HistNext : (AutomatonProd M).State × Fin 2 → A → Set (Fin 2) :=
   fun (s, h) _ ↦
-    if s 0 ∈ acc 0 ∧ h = 1 then {0} else
-    if s 1 ∈ acc 1 ∧ h = 0 then {1} else {h}
+    if s 0 ∈ acc 0 ∧ h = 0 then {1} else
+    if s 1 ∈ acc 1 ∧ h = 1 then {0} else {h}
 
-private def _Inter2 : Automaton A := AutomatonHist (AutomatonProd M) _HistInit2 (_HistNext2 M acc)
+def AutomatonInter2 : Automaton A :=
+  AutomatonHist (AutomatonProd M) AutomatonInter2_HistInit (AutomatonInter2_HistNext M acc)
 
-private def _Acc2 : Set (_Inter2 M acc).State := { (_, h) | h = 0 }
+def AutomatonInter2_Acc : Set (AutomatonInter2 M acc).State :=
+  { (s, h) | (s 0 ∈ acc 0 ∧ h = 0) ∨ (s 1 ∈ acc 1 ∧ h = 1) }
 
-theorem accepted_omega_lang_inter2 :
-    ∃ M' : Automaton.{u, v} A, ∃ acc' : Set (M'.State),
-    AcceptedOmegaLang M' acc' = ⋂ i : Fin 2, AcceptedOmegaLang (M i) (acc i) := by
-  use (_Inter2 M acc), (_Acc2 M acc)
+theorem accepted_omega_langAutomatonInter2 :
+    AcceptedOmegaLang (AutomatonInter2 M acc) (AutomatonInter2_Acc M acc) = ⋂ i : Fin 2, AcceptedOmegaLang (M i) (acc i) := by
   ext as ; simp [AcceptedOmegaLang, BuchiAccept]
   constructor
   · rintro ⟨ss, h_run, h_inf⟩ i
-    have h_run1 := automaton_hist_inf_run_proj (AutomatonProd M) _HistInit2 (_HistNext2 M acc) as ss h_run
+    have h_run1 := automaton_hist_inf_run_proj (AutomatonProd M) AutomatonInter2_HistInit (AutomatonInter2_HistNext M acc) as ss h_run
     have h_run2 := (automaton_prod_inf_run M as (Prod.fst ∘ ss)).mp h_run1 i
     use (fun k ↦ (Prod.fst ∘ ss) k i) ; constructor
     · assumption
@@ -413,12 +412,12 @@ theorem accepted_omega_lang_inter2 :
     let ss2 := fun k i ↦ ss i k
     have h_ss2 : ∀ i, InfRun (M i) as (fun k ↦ ss2 k i) := by intro i ; exact (h_ss i).1
     have h_run2 := (automaton_prod_inf_run M as ss2).mpr h_ss2
-    have h_hist_init : _HistInit2.Nonempty := by simp [_HistInit2]
-    have h_hist_next : ∀ s a, (_HistNext2 M acc s a).Nonempty := by
-      intro s a ; simp only [_HistNext2]
-      rcases Classical.em (s.1 0 ∈ acc 0 ∧ s.2 = 1) with cond1 | cond1 <;> simp [cond1]
-      rcases Classical.em (s.1 1 ∈ acc 1 ∧ s.2 = 0) with cond2 | cond2 <;> simp [cond2]
-    have h_runh := automaton_hist_inf_run_exists (AutomatonProd M) _HistInit2 (_HistNext2 M acc) as ss2
+    have h_hist_init : AutomatonInter2_HistInit.Nonempty := by simp [AutomatonInter2_HistInit]
+    have h_hist_next : ∀ s a, (AutomatonInter2_HistNext M acc s a).Nonempty := by
+      intro s a ; simp only [AutomatonInter2_HistNext]
+      rcases Classical.em (s.1 0 ∈ acc 0 ∧ s.2 = 0) with cond1 | cond1 <;> simp [cond1]
+      rcases Classical.em (s.1 1 ∈ acc 1 ∧ s.2 = 1) with cond2 | cond2 <;> simp [cond2]
+    have h_runh := automaton_hist_inf_run_exists (AutomatonProd M) AutomatonInter2_HistInit (AutomatonInter2_HistNext M acc) as ss2
       h_hist_init h_hist_next h_run2
     obtain ⟨hs, h_run⟩ := h_runh
     use (fun k ↦ (ss2 k, hs k))

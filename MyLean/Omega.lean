@@ -359,7 +359,7 @@ theorem automaton_hist_inf_run_proj (as : ℕ → A) (ss : ℕ → M.State × H)
     simp [AutomatonHist] at h'
     exact h'.1
 
-def _MakeHist (as : ℕ → A) (ss : ℕ → M.State) (hs0 : H) (hs' : M.State × H → A -> H) : ℕ → H
+private def _MakeHist (as : ℕ → A) (ss : ℕ → M.State) (hs0 : H) (hs' : M.State × H → A -> H) : ℕ → H
   | 0 => hs0
   | k + 1 => hs' (ss k, _MakeHist as ss hs0 hs' k) (as k)
 
@@ -398,7 +398,12 @@ def AutomatonInter2 : Automaton A :=
 def AutomatonInter2_Acc : Set (AutomatonInter2 M acc).State :=
   { (s, h) | (s 0 ∈ acc 0 ∧ h = 0) ∨ (s 1 ∈ acc 1 ∧ h = 1) }
 
-theorem accepted_omega_langAutomatonInter2 :
+private lemma automaton_inter2_inf_occ
+  (as : ℕ → A) (ss : ℕ → (AutomatonInter2 M acc).State) (h_inf : InfRun (AutomatonInter2 M acc) as ss) :
+    (InfOcc (fun k ↦ (Prod.fst ∘ ss) k 0)) ∩ (acc 0) ≠ ∅ ↔ (InfOcc (fun k ↦ (Prod.fst ∘ ss) k 1)) ∩ (acc 1) ≠ ∅ := by
+  sorry
+
+theorem accepted_omega_lang_inter2 :
     AcceptedOmegaLang (AutomatonInter2 M acc) (AutomatonInter2_Acc M acc) = ⋂ i : Fin 2, AcceptedOmegaLang (M i) (acc i) := by
   ext as ; simp [AcceptedOmegaLang, BuchiAccept]
   constructor
@@ -407,6 +412,20 @@ theorem accepted_omega_langAutomatonInter2 :
     have h_run2 := (automaton_prod_inf_run M as (Prod.fst ∘ ss)).mp h_run1 i
     use (fun k ↦ (Prod.fst ∘ ss) k i) ; constructor
     · assumption
+    /-
+    case h.right
+    A : Type u_1
+    M : Fin 2 → Automaton A
+    acc : (i : Fin 2) → Set (Automaton.State A)
+    as : ℕ → A
+    ss : ℕ → Automaton.State A
+    h_run : InfRun (AutomatonInter2 M acc) as ss
+    h_inf : ¬InfOcc ss ∩ AutomatonInter2_Acc M acc = ∅
+    i : Fin 2
+    h_run1 : InfRun (AutomatonProd M) as (Prod.fst ∘ ss)
+    h_run2 : InfRun (M i) as fun k ↦ (Prod.fst ∘ ss) k i
+    ⊢ ¬(InfOcc fun k ↦ (Prod.fst ∘ ss) k i) ∩ acc i = ∅
+    -/
     sorry
   · intro h_all
     choose ss h_ss using h_all
@@ -424,6 +443,24 @@ theorem accepted_omega_langAutomatonInter2 :
     use (fun k ↦ (ss2 k, hs k))
     constructor
     · assumption
+    /-
+    case h.right
+    A : Type u_1
+    M : Fin 2 → Automaton A
+    acc : (i : Fin 2) → Set (Automaton.State A)
+    as : ℕ → A
+    ss : (i : Fin 2) → ℕ → Automaton.State A
+    h_ss : ∀ (i : Fin 2), InfRun (M i) as (ss i) ∧ ¬InfOcc (ss i) ∩ acc i = ∅
+    ss2 : ℕ → (i : Fin 2) → Automaton.State A := fun k i ↦ ss i k
+    h_ss2 : ∀ (i : Fin 2), InfRun (M i) as fun k ↦ ss2 k i
+    h_run2 : InfRun (AutomatonProd M) as ss2
+    h_hist_init : AutomatonInter2_HistInit.Nonempty
+    h_hist_next : ∀ (s : Automaton.State A × Fin 2) (a : A), (AutomatonInter2_HistNext M acc s a).Nonempty
+    hs : ℕ → Fin 2
+    h_run : InfRun (AutomatonHist (AutomatonProd M) AutomatonInter2_HistInit (AutomatonInter2_HistNext M acc)) as fun k ↦
+      (ss2 k, hs k)
+    ⊢ ¬(InfOcc fun k ↦ (ss2 k, hs k)) ∩ AutomatonInter2_Acc M acc = ∅
+    -/
     sorry
 
 end AcceptedOmegaLangInter2

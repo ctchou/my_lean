@@ -423,12 +423,13 @@ theorem accepted_omega_lang_inter2 :
     let ss2 := fun k i ↦ ss i k
     have h_ss2 : ∀ i, InfRun (M i) as (fun k ↦ ss2 k i) := by intro i ; exact (h_ss i).1
     have h_run2 := (automaton_prod_inf_run M as ss2).mpr h_ss2
+    have h_hist_init : _HistInit2.Nonempty := by simp [_HistInit2]
     have h_hist_next : ∀ s a, (_HistNext2 M acc s a).Nonempty := by
       intro s a ; simp only [_HistNext2]
       rcases Classical.em (s.1 0 ∈ acc 0 ∧ s.2 = 0) with cond1 | cond1 <;> simp [cond1]
       rcases Classical.em (s.1 1 ∈ acc 1 ∧ s.2 = 1) with cond2 | cond2 <;> simp [cond2]
     have h_runh := automaton_hist_inf_run_exists (AutomatonProd M) _HistInit2 (_HistNext2 M acc) as ss2
-      (by simp [_HistInit2]) (by intro s a ; simp [_HistNext2]; sorry) h_run2
+      h_hist_init h_hist_next h_run2
     obtain ⟨hs, h_run⟩ := h_runh
     use (fun k ↦ (ss2 k, hs k))
     constructor

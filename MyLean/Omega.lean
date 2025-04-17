@@ -83,7 +83,7 @@ def FinAccept (M : Automaton A) (acc : Set M.State) (n : ℕ) (as : Fin n → A)
   ∃ ss : Fin (n + 1) → M.State, FinRun M n as ss ∧ ss n ∈ acc
 
 def BuchiAccept (M : Automaton A) (acc : Set M.State) (as : ℕ → A) :=
-  ∃ ss : ℕ → M.State, InfRun M as ss ∧ InfOcc ss ∩ acc ≠ ∅
+  ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∃ᶠ k in atTop, ss k ∈ acc
 
 def MullerAccept (M : Automaton A) (accSet : Set (Set M.State)) (as : ℕ → A) :=
   ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∃ acc ∈ accSet, InfOcc ss = acc
@@ -241,32 +241,29 @@ theorem accepted_omega_lang_union :
     use i, ss_i
     constructor
     · assumption
-    · obtain ⟨s, h_s⟩ := nonempty_iff_ne_empty.mpr h_inf
-      simp [h_ss_i] at h_s
-      obtain ⟨h_s_inf, i', si', h_si'_acc, h_si'_s⟩ := h_s
-      have ⟨k, h_k⟩ := inf_occ_index h_s_inf
-      simp [← h_k] at h_si'_s
-      rw [Sigma.mk.inj_iff] at h_si'_s
-      obtain ⟨rfl, h_si'_eq⟩ := h_si'_s
-      rw [heq_eq_eq] at h_si'_eq
-      apply nonempty_iff_ne_empty.mp
-      use si' ; simp
-      constructor
-      · rw [← h_k, comp_apply, ← h_si'_eq] at h_s_inf
-        apply inf_occ_map_rev (Sigma.mk i') sigma_mk_injective
-        assumption
-      . assumption
+    · let p k := ∃ i', ∃ si' ∈ acc i', ⟨i', si'⟩ = ss k
+      let q k := ss_i k ∈ acc i
+      have h_p : ∃ᶠ k in atTop, p k := by assumption
+      have h_pq : ∀ k, p k → q k := by
+        rintro k ⟨i', si', h_si'_acc, h_si'_ss⟩
+        simp [h_ss_i] at h_si'_ss
+        rw [Sigma.mk.inj_iff] at h_si'_ss
+        obtain ⟨rfl, h_si'_eq⟩ := h_si'_ss
+        rw [heq_eq_eq] at h_si'_eq
+        simpa [q, ← h_si'_eq]
+      exact Frequently.mono h_p h_pq
   · rintro ⟨i, ss_i, h_run_i, h_inf_i⟩
     use ((Sigma.mk i) ∘ ss_i)
     constructor
     · apply (automaton_sum_inf_run M as ((Sigma.mk i) ∘ ss_i)).mpr
       use i, ss_i
-    · obtain ⟨si, h_si_inf, h_si_acc⟩ := nonempty_iff_ne_empty.mpr h_inf_i
-      apply nonempty_iff_ne_empty.mp
-      use ⟨i, si⟩ ; simp
-      constructor
-      · apply inf_occ_map ; assumption
-      · use i, si
+    · let p k := ss_i k ∈ acc i
+      let q k := ∃ i', ∃ si' ∈ acc i', ⟨i', si'⟩ = ((Sigma.mk i ∘ ss_i) k : (AutomatonSum M).State)
+      have h_p : ∃ᶠ k in atTop, p k := by assumption
+      have h_pq : ∀ k, p k → q k := by
+        simp [p, q] ; intro k h
+        use i, (ss_i k)
+      exact Frequently.mono h_p h_pq
 
 end  AcceptedLangUnion
 
@@ -424,20 +421,6 @@ theorem accepted_omega_lang_inter2 :
     have h_run2 := (automaton_prod_inf_run M as (Prod.fst ∘ ss)).mp h_run1 i
     use (fun k ↦ (Prod.fst ∘ ss) k i) ; constructor
     · assumption
-    /-
-    case h.right
-    A : Type u_1
-    M : Fin 2 → Automaton A
-    acc : (i : Fin 2) → Set (Automaton.State A)
-    as : ℕ → A
-    ss : ℕ → Automaton.State A
-    h_run : InfRun (AutomatonInter2 M acc) as ss
-    h_inf : ¬InfOcc ss ∩ AutomatonInter2_Acc M acc = ∅
-    i : Fin 2
-    h_run1 : InfRun (AutomatonProd M) as (Prod.fst ∘ ss)
-    h_run2 : InfRun (M i) as fun k ↦ (Prod.fst ∘ ss) k i
-    ⊢ ¬(InfOcc fun k ↦ (Prod.fst ∘ ss) k i) ∩ acc i = ∅
-    -/
     sorry
   · intro h_all
     choose ss h_ss using h_all
@@ -455,24 +438,6 @@ theorem accepted_omega_lang_inter2 :
     use (fun k ↦ (ss2 k, hs k))
     constructor
     · assumption
-    /-
-    case h.right
-    A : Type u_1
-    M : Fin 2 → Automaton A
-    acc : (i : Fin 2) → Set (Automaton.State A)
-    as : ℕ → A
-    ss : (i : Fin 2) → ℕ → Automaton.State A
-    h_ss : ∀ (i : Fin 2), InfRun (M i) as (ss i) ∧ ¬InfOcc (ss i) ∩ acc i = ∅
-    ss2 : ℕ → (i : Fin 2) → Automaton.State A := fun k i ↦ ss i k
-    h_ss2 : ∀ (i : Fin 2), InfRun (M i) as fun k ↦ ss2 k i
-    h_run2 : InfRun (AutomatonProd M) as ss2
-    h_hist_init : AutomatonInter2_HistInit.Nonempty
-    h_hist_next : ∀ (s : Automaton.State A × Fin 2) (a : A), (AutomatonInter2_HistNext M acc s a).Nonempty
-    hs : ℕ → Fin 2
-    h_run : InfRun (AutomatonHist (AutomatonProd M) AutomatonInter2_HistInit (AutomatonInter2_HistNext M acc)) as fun k ↦
-      (ss2 k, hs k)
-    ⊢ ¬(InfOcc fun k ↦ (ss2 k, hs k)) ∩ AutomatonInter2_Acc M acc = ∅
-    -/
     sorry
 
 end AcceptedOmegaLangInter2

@@ -397,20 +397,20 @@ variable {A : Type*} (M : Fin 2 → Automaton A) (acc : (i : Fin 2) → Set ((M 
 def AutomatonInter2_HistInit : Set (Fin 2) := {0}
 
 def AutomatonInter2_HistNext : (AutomatonProd M).State × Fin 2 → A → Set (Fin 2) :=
-  fun (s, h) _ ↦
-    if s 0 ∈ acc 0 ∧ h = 0 then {1} else
-    if s 1 ∈ acc 1 ∧ h = 1 then {0} else {h}
+  fun s _ ↦
+    if s.1 0 ∈ acc 0 ∧ s.2 = 0 then {1} else
+    if s.1 1 ∈ acc 1 ∧ s.2 = 1 then {0} else {s.2}
 
 def AutomatonInter2 : Automaton A :=
   AutomatonHist (AutomatonProd M) AutomatonInter2_HistInit (AutomatonInter2_HistNext M acc)
 
 def AutomatonInter2_Acc : Set (AutomatonInter2 M acc).State :=
-  { (s, h) | s 0 ∈ acc 0 ∧ h = 0 } ∪ { (s, h) | s 1 ∈ acc 1 ∧ h = 1 }
+  { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 } ∪ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 }
 
-lemma automaton_inter2_inf_occ {as : ℕ → A} {ss : ℕ → (AutomatonInter2 M acc).State}
+private lemma automaton_inter2_lemma1 {as : ℕ → A} {ss : ℕ → (AutomatonInter2 M acc).State}
     (h_inf : InfRun (AutomatonInter2 M acc) as ss) :
-      (∃ᶠ k in atTop, ss k ∈ { (s, h) | s 0 ∈ acc 0 ∧ h = 0 }) ↔
-      (∃ᶠ k in atTop, ss k ∈ { (s, h) | s 1 ∈ acc 1 ∧ h = 1 }) := by
+      (∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 }) ↔
+      (∃ᶠ k in atTop, ss k ∈ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 }) := by
   sorry
 
 theorem accepted_omega_lang_inter2 :
@@ -422,21 +422,24 @@ theorem accepted_omega_lang_inter2 :
     have h_run2 := (automaton_prod_inf_run M as (Prod.fst ∘ ss)).mp h_run1 i
     use (fun k ↦ (Prod.fst ∘ ss) k i) ; constructor
     · assumption
-    /-
-    case h.right
-    A : Type u_1
-    M : Fin 2 → Automaton A
-    acc : (i : Fin 2) → Set (Automaton.State A)
-    as : ℕ → A
-    ss : ℕ → Automaton.State A
-    h_run : InfRun (AutomatonInter2 M acc) as ss
-    h_inf : ∃ᶠ (k : ℕ) in atTop, ss k ∈ AutomatonInter2_Acc M acc
-    i : Fin 2
-    h_run1 : InfRun (AutomatonProd M) as (Prod.fst ∘ ss)
-    h_run2 : InfRun (M i) as fun k ↦ (Prod.fst ∘ ss) k i
-    ⊢ ∃ᶠ (k : ℕ) in atTop, (Prod.fst ∘ ss) k i ∈ acc i
-    -/
-    sorry
+    let p0 k := ss k ∈ { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 }
+    let p1 k := ss k ∈ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 }
+    have h_inf_or : ∃ᶠ k in atTop, p0 k ∨ p1 k := by exact h_inf
+    rw [frequently_or_distrib] at h_inf_or
+    let p0' k := (Prod.fst ∘ ss) k 0 ∈ acc 0
+    let p1' k := (Prod.fst ∘ ss) k 1 ∈ acc 1
+    have h_p0_p0' : ∀ k, p0 k → p0' k := by intro k ; simp [p0, p0'] ; tauto
+    have h_p1_p1' : ∀ k, p1 k → p1' k := by intro k ; simp [p1, p1'] ; tauto
+    revert i ; rw [Fin.forall_fin_two]
+    constructor <;> intro h_run_i
+    · rcases h_inf_or with h_inf0 | h_inf1
+      · exact Frequently.mono h_inf0 h_p0_p0'
+      · rw [← automaton_inter2_lemma1 M acc h_run] at h_inf1
+        exact Frequently.mono h_inf1 h_p0_p0'
+    · rcases h_inf_or with h_inf0 | h_inf1
+      · rw [automaton_inter2_lemma1 M acc h_run] at h_inf0
+        exact Frequently.mono h_inf0 h_p0_p0'
+      · exact Frequently.mono h_inf1 h_p1_p1'
   · intro h_all
     choose ss h_ss using h_all
     let ss2 := fun k i ↦ ss i k

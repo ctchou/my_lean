@@ -438,7 +438,7 @@ theorem accepted_omega_lang_inter2 :
         exact Frequently.mono h_inf1 h_p0_p0'
     · rcases h_inf_or with h_inf0 | h_inf1
       · rw [automaton_inter2_lemma1 M acc h_run] at h_inf0
-        exact Frequently.mono h_inf0 h_p0_p0'
+        exact Frequently.mono h_inf0 h_p1_p1'
       · exact Frequently.mono h_inf1 h_p1_p1'
   · intro h_all
     choose ss h_ss using h_all

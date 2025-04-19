@@ -419,7 +419,7 @@ theorem accepted_omega_lang_inter2 :
   constructor
   · rintro ⟨ss, h_run, h_inf⟩ i
     have h_run1 := automaton_hist_inf_run_proj (AutomatonProd M) AutomatonInter2_HistInit (AutomatonInter2_HistNext M acc) h_run
-    have h_run2 := (automaton_prod_inf_run M as (Prod.fst ∘ ss)).mp h_run1 i
+    have h_run' := (automaton_prod_inf_run M as (Prod.fst ∘ ss)).mp h_run1 i
     use (fun k ↦ (Prod.fst ∘ ss) k i) ; constructor
     · assumption
     let p0 k := ss k ∈ { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 }
@@ -442,18 +442,18 @@ theorem accepted_omega_lang_inter2 :
       · exact Frequently.mono h_inf1 h_p1_p1'
   · intro h_all
     choose ss h_ss using h_all
-    let ss2 := fun k i ↦ ss i k
-    have h_ss2 : ∀ i, InfRun (M i) as (fun k ↦ ss2 k i) := by intro i ; exact (h_ss i).1
-    have h_run2 := (automaton_prod_inf_run M as ss2).mpr h_ss2
+    let ss' := fun k i ↦ ss i k
+    have h_ss' : ∀ i, InfRun (M i) as (fun k ↦ ss' k i) := by intro i ; exact (h_ss i).1
+    have h_run' := (automaton_prod_inf_run M as ss').mpr h_ss'
     have h_hist_init : AutomatonInter2_HistInit.Nonempty := by simp [AutomatonInter2_HistInit]
     have h_hist_next : ∀ s a, (AutomatonInter2_HistNext M acc s a).Nonempty := by
       intro s a ; simp only [AutomatonInter2_HistNext]
       rcases Classical.em (s.1 0 ∈ acc 0 ∧ s.2 = 0) with cond1 | cond1 <;> simp [cond1]
       rcases Classical.em (s.1 1 ∈ acc 1 ∧ s.2 = 1) with cond2 | cond2 <;> simp [cond2]
     have h_runh := automaton_hist_inf_run_exists (AutomatonProd M) AutomatonInter2_HistInit (AutomatonInter2_HistNext M acc)
-      h_hist_init h_hist_next h_run2
+      h_hist_init h_hist_next h_run'
     obtain ⟨hs, h_run⟩ := h_runh
-    use (fun k ↦ (ss2 k, hs k))
+    use (fun k ↦ (ss' k, hs k))
     constructor
     · assumption
     /-
@@ -464,15 +464,15 @@ theorem accepted_omega_lang_inter2 :
     as : ℕ → A
     ss : (i : Fin 2) → ℕ → Automaton.State A
     h_ss : ∀ (i : Fin 2), InfRun (M i) as (ss i) ∧ ∃ᶠ (k : ℕ) in atTop, ss i k ∈ acc i
-    ss2 : ℕ → (i : Fin 2) → Automaton.State A := fun k i ↦ ss i k
-    h_ss2 : ∀ (i : Fin 2), InfRun (M i) as fun k ↦ ss2 k i
-    h_run2 : InfRun (AutomatonProd M) as ss2
+    ss' : ℕ → (i : Fin 2) → Automaton.State A := fun k i ↦ ss i k
+    h_ss' : ∀ (i : Fin 2), InfRun (M i) as fun k ↦ ss' k i
+    h_run' : InfRun (AutomatonProd M) as ss'
     h_hist_init : AutomatonInter2_HistInit.Nonempty
     h_hist_next : ∀ (s : Automaton.State A × Fin 2) (a : A), (AutomatonInter2_HistNext M acc s a).Nonempty
     hs : ℕ → Fin 2
     h_run : InfRun (AutomatonHist (AutomatonProd M) AutomatonInter2_HistInit (AutomatonInter2_HistNext M acc)) as fun k ↦
-      (ss2 k, hs k)
-    ⊢ ∃ᶠ (k : ℕ) in atTop, (ss2 k, hs k) ∈ AutomatonInter2_Acc M acc
+      (ss' k, hs k)
+    ⊢ ∃ᶠ (k : ℕ) in atTop, (ss' k, hs k) ∈ AutomatonInter2_Acc M acc
     -/
     sorry
 

@@ -44,19 +44,6 @@ theorem inf_occ_map_rev {X Y : Type*} {xs : ℕ → X} {x : X} (f : X → Y)
     simp [p, q] ; intro k h_p ; exact hi h_p
   exact Frequently.mono h hpq
 
-theorem inf_occ_inter_nonempty {X : Type*} (xs : ℕ → X) (s : Set X) :
-    InfOcc xs ∩ s ≠ ∅ ↔ ∃ᶠ k in atTop, xs k ∈ s := by
-  rw [← nonempty_iff_ne_empty]
-  constructor
-  · rintro ⟨x, h_inf, h_s⟩
-    simp [InfOcc] at h_inf
-    let p k := xs k = x
-    let q k := xs k ∈ s
-    have h_p : ∃ᶠ k in atTop, p k := by assumption
-    have h_imp : ∀ k, p k → q k := by simp [p, q] ; intro k h ; simpa [h]
-    exact Frequently.mono h_p h_imp
-  . sorry
-
 end Sequence
 
 section Automaton
@@ -408,8 +395,16 @@ def AutomatonInter2_Acc : Set (AutomatonInter2 M acc).State :=
   { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 } ∪ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 }
 
 private lemma automaton_inter2_lemma1 {as : ℕ → A} {ss : ℕ → (AutomatonInter2 M acc).State}
-    (h_inf : InfRun (AutomatonInter2 M acc) as ss) :
+    (h_run : InfRun (AutomatonInter2 M acc) as ss) :
       (∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 }) ↔
+      (∃ᶠ k in atTop, ss k ∈ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 }) := by
+  sorry
+
+private lemma automaton_inter2_lemma2 {as : ℕ → A} {ss : ℕ → (AutomatonInter2 M acc).State}
+    (h_run : InfRun (AutomatonInter2 M acc) as ss)
+    (h_inf0 : ∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 })
+    (h_inf1 : ∃ᶠ k in atTop, ss k ∈ { s | s.1 1 ∈ acc 1 }) :
+      (∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 }) ∧
       (∃ᶠ k in atTop, ss k ∈ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 }) := by
   sorry
 
@@ -456,24 +451,12 @@ theorem accepted_omega_lang_inter2 :
     use (fun k ↦ (ss' k, hs k))
     constructor
     · assumption
-    /-
-    case h.right
-    A : Type u_1
-    M : Fin 2 → Automaton A
-    acc : (i : Fin 2) → Set (Automaton.State A)
-    as : ℕ → A
-    ss : (i : Fin 2) → ℕ → Automaton.State A
-    h_ss : ∀ (i : Fin 2), InfRun (M i) as (ss i) ∧ ∃ᶠ (k : ℕ) in atTop, ss i k ∈ acc i
-    ss' : ℕ → (i : Fin 2) → Automaton.State A := fun k i ↦ ss i k
-    h_ss' : ∀ (i : Fin 2), InfRun (M i) as fun k ↦ ss' k i
-    h_run' : InfRun (AutomatonProd M) as ss'
-    h_hist_init : AutomatonInter2_HistInit.Nonempty
-    h_hist_next : ∀ (s : Automaton.State A × Fin 2) (a : A), (AutomatonInter2_HistNext M acc s a).Nonempty
-    hs : ℕ → Fin 2
-    h_run : InfRun (AutomatonHist (AutomatonProd M) AutomatonInter2_HistInit (AutomatonInter2_HistNext M acc)) as fun k ↦
-      (ss' k, hs k)
-    ⊢ ∃ᶠ (k : ℕ) in atTop, (ss' k, hs k) ∈ AutomatonInter2_Acc M acc
-    -/
-    sorry
+    have h_inf0 : ∃ᶠ k in atTop, ss' k ∈ { s | s 0 ∈ acc 0 } := by simp [ss', (h_ss 0).2]
+    have h_inf1 : ∃ᶠ k in atTop, ss' k ∈ { s | s 1 ∈ acc 1 } := by simp [ss', (h_ss 1).2]
+    have h_inf0' := (automaton_inter2_lemma2 M acc h_run h_inf0 h_inf1).1
+    let p0 k := (ss' k, hs k) ∈ {s | s.1 0 ∈ acc 0 ∧ s.2 = 0}
+    let p1 k := (ss' k, hs k) ∈ {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} ∪ {s | s.1 1 ∈ acc 1 ∧ s.2 = 1}
+    have h_p0_p1 : ∀ k, p0 k → p1 k := by intro k ; simp [p0, p1] ; tauto
+    exact Frequently.mono h_inf0' h_p0_p1
 
 end AcceptedOmegaLangInter2

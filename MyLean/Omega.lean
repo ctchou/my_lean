@@ -21,29 +21,6 @@ section Sequence
 def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
   fun k ↦ if h : k < xl.length then xl[k] else xs (k - xl.length)
 
-def InfOcc {X : Type*} (xs : ℕ → X) : Set X :=
-  { x : X | ∃ᶠ k in atTop, xs k = x }
-
-theorem inf_occ_index {X : Type*} {xs : ℕ → X} {x : X}
-    (h : x ∈ InfOcc xs) : ∃ k, xs k = x := by
-  exact Frequently.exists h
-
-theorem inf_occ_map {X Y : Type*} {xs : ℕ → X} {x : X} {f : X → Y}
-    (h : x ∈ InfOcc xs) : f x ∈ InfOcc (f ∘ xs) := by
-  let p k := xs k = x
-  let q k := (f ∘ xs) k = f x
-  have hpq : ∀ k, p k → q k := by
-    simp [p, q] ; intro k h_p ; rw [h_p]
-  exact Frequently.mono h hpq
-
-theorem inf_occ_map_rev {X Y : Type*} {xs : ℕ → X} {x : X} (f : X → Y)
-    (hi : f.Injective) (h : f x ∈ InfOcc (f ∘ xs)) : (x ∈ InfOcc xs) := by
-  let p k := (f ∘ xs) k = f x
-  let q k := xs k = x
-  have hpq : ∀ k, p k → q k := by
-    simp [p, q] ; intro k h_p ; exact hi h_p
-  exact Frequently.mono h hpq
-
 end Sequence
 
 section Automaton
@@ -73,13 +50,13 @@ def BuchiAccept (M : Automaton A) (acc : Set M.State) (as : ℕ → A) :=
   ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∃ᶠ k in atTop, ss k ∈ acc
 
 def MullerAccept (M : Automaton A) (accSet : Set (Set M.State)) (as : ℕ → A) :=
-  ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∃ acc ∈ accSet, InfOcc ss = acc
+  ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∃ acc ∈ accSet, ∀ s, s ∈ acc ↔ (∃ᶠ k in atTop, ss k = s)
 
 def RabinAccept (M : Automaton A) (accPairs : Set (Set M.State × Set M.State)) (as : ℕ → A) :=
-  ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∃ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ ∧ InfOcc ss ∩ pair.2 = ∅
+  ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∃ pair ∈ accPairs, (∃ᶠ k in atTop, ss k ∈ pair.1) ∧ (∀ᶠ k in atTop, ss k ∉ pair.2)
 
 def StreettAccept (M : Automaton A) (accPairs : Set (Set M.State × Set M.State)) (as : ℕ → A) :=
-  ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∀ pair ∈ accPairs, InfOcc ss ∩ pair.1 ≠ ∅ → InfOcc ss ∩ pair.2 ≠ ∅
+  ∃ ss : ℕ → M.State, InfRun M as ss ∧ ∀ pair ∈ accPairs, (∃ᶠ k in atTop, ss k ∈ pair.1) → (∃ᶠ k in atTop, ss k ∈ pair.2)
 
 def AcceptedLang (M : Automaton A) (acc : Set M.State) : Set (List A) :=
   { al | ∃ n as, FinAccept M acc n as ∧ al = List.ofFn as }

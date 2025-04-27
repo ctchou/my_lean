@@ -21,23 +21,23 @@ section Sequence
 def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
   fun k ↦ if h : k < xl.length then xl[k] else xs (k - xl.length)
 
-def Step {X : Type*} (p q : Set X) (xs : ℕ → X) : Prop :=
+def Step {X : Type*} (xs : ℕ → X) (p q : Set X) : Prop :=
   ∀ k, xs k ∈ p → xs (k + 1) ∈ q
 
-def LeadsTo {X : Type*} (p q : Set X) (xs : ℕ → X) : Prop :=
+def LeadsTo {X : Type*} (xs : ℕ → X) (p q : Set X) : Prop :=
   ∀ k, xs k ∈ p → ∃ k' ≥ k, xs k' ∈ q
 
 variable {X : Type*} {xs : ℕ → X}
 
 theorem leads_to_step {p q : Set X}
-    (h : Step p q xs) : LeadsTo p q xs := by
+    (h : Step xs p q) : LeadsTo xs p q := by
   intro k h_p
   use (k + 1) ; constructor
   · omega
   · exact h k h_p
 
 theorem leads_to_trans {p q r : Set X}
-    (h1 : LeadsTo p q xs) (h2 : LeadsTo q r xs) : LeadsTo p r xs := by
+    (h1 : LeadsTo xs p q) (h2 : LeadsTo xs q r) : LeadsTo xs p r := by
   intro k h_p
   obtain ⟨k', h_k', h_q⟩ := h1 k h_p
   obtain ⟨k'', h_k'', h_r⟩ := h2 k' h_q
@@ -46,7 +46,7 @@ theorem leads_to_trans {p q r : Set X}
   · assumption
 
 theorem leads_to_until_frequently {p q : Set X}
-    (h1 : Step (p ∩ qᶜ) p xs) (h2 : ∃ᶠ k in atTop, xs k ∉ p) : LeadsTo p q xs := by
+    (h1 : Step xs (p ∩ qᶜ) p) (h2 : ∃ᶠ k in atTop, xs k ∉ p) : LeadsTo xs p q := by
   intro k h_p
   by_contra! h_q
   have h_p' : ∀ k' ≥ k, xs k' ∈ p := by
@@ -67,7 +67,7 @@ theorem leads_to_until_frequently {p q : Set X}
   contradiction
 
 theorem frequently_leads_to_frequently {p q : Set X}
-    (h1 : ∃ᶠ k in atTop, xs k ∈ p) (h2 : LeadsTo p q xs) : ∃ᶠ k in atTop, xs k ∈ q := by
+    (h1 : ∃ᶠ k in atTop, xs k ∈ p) (h2 : LeadsTo xs p q) : ∃ᶠ k in atTop, xs k ∈ q := by
   rw [frequently_atTop] at h1 ⊢
   intro k0
   obtain ⟨k1, h_k1, h_k1_p⟩ := h1 k0
@@ -431,15 +431,15 @@ private lemma automaton_inter2_lemma1 {as : ℕ → A} {ss : ℕ → (AutomatonI
       (∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 }) ↔
       (∃ᶠ k in atTop, ss k ∈ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 }) := by
   constructor <;> intro h_inf
-  · suffices h_lt : LeadsTo {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} ss by
+  · suffices h_lt : LeadsTo ss {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} by
       exact frequently_leads_to_frequently h_inf h_lt
-    have h_lt1 : LeadsTo {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} {s | s.2 = 1} ss := by
+    have h_lt1 : LeadsTo ss {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} {s | s.2 = 1} := by
       apply leads_to_step ; simp [Step]
       intro k h_acc h_hist
       have h_step := (h_run.2 k).2
       simp [AutomatonInter2_HistNext, h_acc, h_hist] at h_step
       assumption
-    have h_lt2 : LeadsTo {s | s.2 = 1} {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} ss := by
+    have h_lt2 : LeadsTo ss {s | s.2 = 1} {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} := by
       apply leads_to_until_frequently
       · simp [Step]
         intro k h_hist h_acc
@@ -455,15 +455,15 @@ private lemma automaton_inter2_lemma1 {as : ℕ → A} {ss : ℕ → (AutomatonI
           intro _ h ; simp [h]
         exact Frequently.mono h_inf h_imp
     exact leads_to_trans h_lt1 h_lt2
-  · suffices h_lt : LeadsTo {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} ss by
+  · suffices h_lt : LeadsTo ss {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} by
       exact frequently_leads_to_frequently h_inf h_lt
-    have h_lt1 : LeadsTo {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} {s | s.2 = 0} ss := by
+    have h_lt1 : LeadsTo ss {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} {s | s.2 = 0} := by
       apply leads_to_step ; simp [Step]
       intro k h_acc h_hist
       have h_step := (h_run.2 k).2
       simp [AutomatonInter2_HistNext, h_acc, h_hist] at h_step
       assumption
-    have h_lt2 : LeadsTo {s | s.2 = 0} {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} ss := by
+    have h_lt2 : LeadsTo ss {s | s.2 = 0} {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} := by
       apply leads_to_until_frequently
       · simp [Step]
         intro k h_hist h_acc

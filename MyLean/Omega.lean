@@ -430,7 +430,55 @@ private lemma automaton_inter2_lemma1 {as : ℕ → A} {ss : ℕ → (AutomatonI
     (h_run : InfRun (AutomatonInter2 M acc) as ss) :
       (∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 }) ↔
       (∃ᶠ k in atTop, ss k ∈ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 }) := by
-  sorry
+  constructor <;> intro h_inf
+  · suffices h_lt : LeadsTo {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} ss by
+      exact frequently_leads_to_frequently h_inf h_lt
+    have h_lt1 : LeadsTo {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} {s | s.2 = 1} ss := by
+      apply leads_to_step ; simp [Step]
+      intro k h_acc h_hist
+      have h_step := (h_run.2 k).2
+      simp [AutomatonInter2_HistNext, h_acc, h_hist] at h_step
+      assumption
+    have h_lt2 : LeadsTo {s | s.2 = 1} {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} ss := by
+      apply leads_to_until_frequently
+      · simp [Step]
+        intro k h_hist h_acc
+        rw [imp_not_comm] at h_acc
+        have h_acc := h_acc h_hist
+        have h_step := (h_run.2 k).2
+        simp [AutomatonInter2_HistNext, h_acc, h_hist] at h_step
+        assumption
+      · let p k := ss k ∈ {s | s.1 0 ∈ acc 0 ∧ s.2 = 0}
+        let q k := ss k ∉ {s | s.2 = 1}
+        have h_imp : ∀ k, p k → q k := by
+          intro k ; simp [p, q]
+          intro _ h ; simp [h]
+        exact Frequently.mono h_inf h_imp
+    exact leads_to_trans h_lt1 h_lt2
+  · suffices h_lt : LeadsTo {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} ss by
+      exact frequently_leads_to_frequently h_inf h_lt
+    have h_lt1 : LeadsTo {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} {s | s.2 = 0} ss := by
+      apply leads_to_step ; simp [Step]
+      intro k h_acc h_hist
+      have h_step := (h_run.2 k).2
+      simp [AutomatonInter2_HistNext, h_acc, h_hist] at h_step
+      assumption
+    have h_lt2 : LeadsTo {s | s.2 = 0} {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} ss := by
+      apply leads_to_until_frequently
+      · simp [Step]
+        intro k h_hist h_acc
+        rw [imp_not_comm] at h_acc
+        have h_acc := h_acc h_hist
+        have h_step := (h_run.2 k).2
+        simp [AutomatonInter2_HistNext, h_acc, h_hist] at h_step
+        assumption
+      · let p k := ss k ∈ {s | s.1 1 ∈ acc 1 ∧ s.2 = 1}
+        let q k := ss k ∉ {s | s.2 = 0}
+        have h_imp : ∀ k, p k → q k := by
+          intro k ; simp [p, q]
+          intro _ h ; simp [h]
+        exact Frequently.mono h_inf h_imp
+    exact leads_to_trans h_lt1 h_lt2
 
 private lemma automaton_inter2_lemma2 {as : ℕ → A} {ss : ℕ → (AutomatonInter2 M acc).State}
     (h_run : InfRun (AutomatonInter2 M acc) as ss)

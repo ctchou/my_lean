@@ -45,7 +45,7 @@ theorem leads_to_trans {p q r : Set X}
   · omega
   · assumption
 
-theorem leads_to_until_frequently {p q : Set X}
+theorem leads_to_until_frequently_1 {p q : Set X}
     (h1 : Step xs (p ∩ qᶜ) p) (h2 : ∃ᶠ k in atTop, xs k ∉ p) : LeadsTo xs p q := by
   intro k h_p
   by_contra! h_q
@@ -56,14 +56,33 @@ theorem leads_to_until_frequently {p q : Set X}
     revert k' h_k'
     induction' n with n h_ind <;> intro k' h_k' <;> simp [h_k']
     · assumption
-    have h_q_n := h_q (k + n) (by omega)
     have h_pq_n : xs (k + n) ∈ p ∩ qᶜ := by
+      have h_q_n := h_q (k + n) (by omega)
       simp [h_q_n]
       exact h_ind (k + n) (rfl)
     exact h1 (k + n) h_pq_n
   rw [frequently_atTop] at h2
   obtain ⟨k', h_k', h_not_p⟩ := h2 k
   have := h_p' k' h_k'
+  contradiction
+
+theorem leads_to_until_frequently_2 {p q : Set X}
+    (h1 : Step xs (p ∩ qᶜ) p) (h2 : ∃ᶠ k in atTop, xs k ∈ q) : LeadsTo xs p (p ∩ q) := by
+  intro k h_p
+  by_contra! h_pq
+  have h_not_pq : ∀ k' ≥ k, xs k' ∈ p ∩ qᶜ := by
+    intro k' h_k'
+    simp [le_iff_exists_add] at h_k'
+    obtain ⟨n, h_k'⟩ := h_k'
+    revert k' h_k'
+    induction' n with n h_ind <;> intro k' h_k' <;> simp [h_k']
+    · have h_pq' := h_pq k (by omega)
+      tauto
+    have h_pq_n := h_ind (k + n) (rfl)
+    sorry
+  rw [frequently_atTop] at h2
+  obtain ⟨k', h_k', h_q'⟩ := h2 k
+  have := (h_not_pq k' h_k').2
   contradiction
 
 theorem frequently_leads_to_frequently {p q : Set X}
@@ -440,7 +459,7 @@ private lemma automaton_inter2_lemma1 {as : ℕ → A} {ss : ℕ → (AutomatonI
       simp [AutomatonInter2_HistNext, h_acc, h_hist] at h_step
       assumption
     have h_lt2 : LeadsTo ss {s | s.2 = 1} {s | s.1 1 ∈ acc 1 ∧ s.2 = 1} := by
-      apply leads_to_until_frequently
+      apply leads_to_until_frequently_1
       · simp [Step]
         intro k h_hist h_acc
         rw [imp_not_comm] at h_acc
@@ -464,7 +483,7 @@ private lemma automaton_inter2_lemma1 {as : ℕ → A} {ss : ℕ → (AutomatonI
       simp [AutomatonInter2_HistNext, h_acc, h_hist] at h_step
       assumption
     have h_lt2 : LeadsTo ss {s | s.2 = 0} {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} := by
-      apply leads_to_until_frequently
+      apply leads_to_until_frequently_1
       · simp [Step]
         intro k h_hist h_acc
         rw [imp_not_comm] at h_acc

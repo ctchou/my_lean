@@ -21,6 +21,51 @@ section Sequence
 def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
   fun k ↦ if h : k < xl.length then xl[k] else xs (k - xl.length)
 
+def Step {X : Type*} (p q : Set X) (xs : ℕ → X) : Prop :=
+  ∀ k, xs k ∈ p → xs (k + 1) ∈ q
+
+def LeadsTo {X : Type*} (p q : Set X) (xs : ℕ → X) : Prop :=
+  ∀ k, xs k ∈ p → ∃ k' ≥ k, xs k' ∈ q
+
+variable {X : Type*} {xs : ℕ → X}
+
+theorem leads_to_step {p q : Set X}
+    (h : Step p q xs) : LeadsTo p q xs := by
+  intro k h_p
+  use (k + 1) ; constructor
+  · omega
+  · exact h k h_p
+
+theorem leads_to_trans {p q r : Set X}
+    (h1 : LeadsTo p q xs) (h2 : LeadsTo q r xs) : LeadsTo p r xs := by
+  intro k h_p
+  obtain ⟨k', h_k', h_q⟩ := h1 k h_p
+  obtain ⟨k'', h_k'', h_r⟩ := h2 k' h_q
+  use k'' ; constructor
+  · omega
+  · assumption
+
+theorem leads_to_until_frequently {p q : Set X}
+    (h1 : Step (p ∩ qᶜ) p xs) (h2 : ∃ᶠ k in atTop, xs k ∉ p) : LeadsTo p q xs := by
+  intro k h_p
+  by_contra! h_q
+  have h_p' : ∀ k' ≥ k, xs k' ∈ p := by
+    intro k' h_k'
+    simp [le_iff_exists_add] at h_k'
+    obtain ⟨n, h_k'⟩ := h_k'
+    revert k' h_k'
+    induction' n with n h_ind <;> intro k' h_k' <;> simp [h_k']
+    · assumption
+    have h_q_n := h_q (k + n) (by omega)
+    have h_pq_n : xs (k + n) ∈ p ∩ qᶜ := by
+      simp [h_q_n]
+      exact h_ind (k + n) (rfl)
+    exact h1 (k + n) h_pq_n
+  rw [frequently_atTop] at h2
+  obtain ⟨k', h_k', h_not_p⟩ := h2 k
+  have := h_p' k' h_k'
+  contradiction
+
 end Sequence
 
 section Automaton

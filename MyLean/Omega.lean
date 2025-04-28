@@ -45,6 +45,10 @@ theorem leads_to_trans {p q r : Set X}
   · omega
   · assumption
 
+theorem leads_to_cases {p q r s : Set X}
+    (h1 : LeadsTo xs (p ∩ q) r) (h2 : LeadsTo xs (p ∩ qᶜ) s) : LeadsTo xs p (r ∪ s) := by
+  sorry
+
 theorem leads_to_until_frequently_1 {p q : Set X}
     (h1 : Step xs (p ∩ qᶜ) p) (h2 : ∃ᶠ k in atTop, xs k ∉ p) : LeadsTo xs p q := by
   intro k h_p

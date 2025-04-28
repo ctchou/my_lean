@@ -69,20 +69,23 @@ theorem leads_to_until_frequently_1 {p q : Set X}
 theorem leads_to_until_frequently_2 {p q : Set X}
     (h1 : Step xs (p ∩ qᶜ) p) (h2 : ∃ᶠ k in atTop, xs k ∈ q) : LeadsTo xs p (p ∩ q) := by
   intro k h_p
-  by_contra! h_pq
-  have h_not_pq : ∀ k' ≥ k, xs k' ∈ p ∩ qᶜ := by
+  by_contra! h_not_pq
+  have h_p_not_q : ∀ k' ≥ k, xs k' ∈ p ∩ qᶜ := by
     intro k' h_k'
     simp [le_iff_exists_add] at h_k'
     obtain ⟨n, h_k'⟩ := h_k'
     revert k' h_k'
     induction' n with n h_ind <;> intro k' h_k' <;> simp [h_k']
-    · have h_pq' := h_pq k (by omega)
+    · have h_not_pq' := h_not_pq k (by omega)
       tauto
-    have h_pq_n := h_ind (k + n) (rfl)
-    sorry
+    have h_n := h_ind (k + n) (rfl)
+    have h_n_p := h1 (k + n) h_n
+    have h_n_q := h_not_pq (k + n + 1) (by omega)
+    simp [h_n_p] at h_n_q
+    simp [← add_assoc] ; tauto
   rw [frequently_atTop] at h2
   obtain ⟨k', h_k', h_q'⟩ := h2 k
-  have := (h_not_pq k' h_k').2
+  have := (h_p_not_q k' h_k').2
   contradiction
 
 theorem frequently_leads_to_frequently {p q : Set X}

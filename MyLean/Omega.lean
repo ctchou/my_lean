@@ -47,7 +47,14 @@ theorem leads_to_trans {p q r : Set X}
 
 theorem leads_to_cases {p q r s : Set X}
     (h1 : LeadsTo xs (p ∩ q) r) (h2 : LeadsTo xs (p ∩ qᶜ) s) : LeadsTo xs p (r ∪ s) := by
-  sorry
+  intro k h_p
+  rcases Classical.em (xs k ∈ q) with h_q | h_not_q
+  · let h_pq : xs k ∈ p ∩ q := by tauto
+    obtain ⟨k', h_k', h_r⟩ := h1 k h_pq
+    use k' ; simp [h_k', h_r]
+  . let h_pq : xs k ∈ p ∩ qᶜ := by tauto
+    obtain ⟨k', h_k', h_s⟩ := h2 k h_pq
+    use k' ; simp [h_k', h_s]
 
 theorem leads_to_until_frequently_1 {p q : Set X}
     (h1 : Step xs (p ∩ qᶜ) p) (h2 : ∃ᶠ k in atTop, xs k ∉ p) : LeadsTo xs p q := by
@@ -510,8 +517,7 @@ private lemma automaton_inter2_lemma2 {as : ℕ → A} {ss : ℕ → (AutomatonI
     (h_run : InfRun (AutomatonInter2 M acc) as ss)
     (h_inf0 : ∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 })
     (h_inf1 : ∃ᶠ k in atTop, ss k ∈ { s | s.1 1 ∈ acc 1 }) :
-      (∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 }) ∧
-      (∃ᶠ k in atTop, ss k ∈ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 }) := by
+      ∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 } ∪ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 } := by
   sorry
 
 theorem accepted_omega_lang_inter2 :
@@ -559,10 +565,6 @@ theorem accepted_omega_lang_inter2 :
     · assumption
     have h_inf0 : ∃ᶠ k in atTop, ss' k ∈ { s | s 0 ∈ acc 0 } := by simp [ss', (h_ss 0).2]
     have h_inf1 : ∃ᶠ k in atTop, ss' k ∈ { s | s 1 ∈ acc 1 } := by simp [ss', (h_ss 1).2]
-    have h_inf0' := (automaton_inter2_lemma2 M acc h_run h_inf0 h_inf1).1
-    let p0 k := (ss' k, hs k) ∈ {s | s.1 0 ∈ acc 0 ∧ s.2 = 0}
-    let p1 k := (ss' k, hs k) ∈ {s | s.1 0 ∈ acc 0 ∧ s.2 = 0} ∪ {s | s.1 1 ∈ acc 1 ∧ s.2 = 1}
-    have h_p0_p1 : ∀ k, p0 k → p1 k := by intro k ; simp [p0, p1] ; tauto
-    exact Frequently.mono h_inf0' h_p0_p1
+    exact automaton_inter2_lemma2 M acc h_run h_inf0 h_inf1
 
 end AcceptedOmegaLangInter2

@@ -525,7 +525,11 @@ private lemma automaton_inter2_lemma2 {as : ℕ → A} {ss : ℕ → (AutomatonI
       ext s ; simp ; tauto
     rw [h_inter]
     apply leads_to_until_frequently_2 (h2 := h_inf0)
-    sorry
+    simp [Step]
+    intro k h_hist h_acc
+    have h_step := (h_run.2 k).2
+    simp [AutomatonInter2_HistNext, h_acc, h_hist] at h_step
+    assumption
   · have h_inter : {s : (AutomatonInter2 M acc).State | s.1 1 ∈ acc 1 ∧ s.2 = 1} = {s | s.2 = 1} ∩ {s | s.1 1 ∈ acc 1} := by
       ext s ; simp ; tauto
     have h_compl : {s : (AutomatonInter2 M acc).State | s.2 = 0}ᶜ = {s | s.2 = 1} := by
@@ -535,7 +539,11 @@ private lemma automaton_inter2_lemma2 {as : ℕ → A} {ss : ℕ → (AutomatonI
       . intro h ; simp [h]
     rw [h_inter, h_compl]
     apply leads_to_until_frequently_2 (h2 := h_inf1)
-    sorry
+    simp [Step]
+    intro k h_hist h_acc
+    have h_step := (h_run.2 k).2
+    simp [AutomatonInter2_HistNext, h_acc, h_hist] at h_step
+    assumption
 
 theorem accepted_omega_lang_inter2 :
     AcceptedOmegaLang (AutomatonInter2 M acc) (AutomatonInter2_Acc M acc) = ⋂ i : Fin 2, AcceptedOmegaLang (M i) (acc i) := by

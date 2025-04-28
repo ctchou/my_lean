@@ -518,7 +518,24 @@ private lemma automaton_inter2_lemma2 {as : ℕ → A} {ss : ℕ → (AutomatonI
     (h_inf0 : ∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 })
     (h_inf1 : ∃ᶠ k in atTop, ss k ∈ { s | s.1 1 ∈ acc 1 }) :
       ∃ᶠ k in atTop, ss k ∈ { s | s.1 0 ∈ acc 0 ∧ s.2 = 0 } ∪ { s | s.1 1 ∈ acc 1 ∧ s.2 = 1 } := by
-  sorry
+  have h_true : ∃ᶠ k in atTop, ss k ∈ univ := by simp [atTop_neBot]
+  apply frequently_leads_to_frequently h_true
+  apply leads_to_cases (p := univ) (q := {s | s.2 = 0}) <;> simp [univ_inter]
+  · have h_inter : {s : (AutomatonInter2 M acc).State | s.1 0 ∈ acc 0 ∧ s.2 = 0} = {s | s.2 = 0} ∩ {s | s.1 0 ∈ acc 0} := by
+      ext s ; simp ; tauto
+    rw [h_inter]
+    apply leads_to_until_frequently_2 (h2 := h_inf0)
+    sorry
+  · have h_inter : {s : (AutomatonInter2 M acc).State | s.1 1 ∈ acc 1 ∧ s.2 = 1} = {s | s.2 = 1} ∩ {s | s.1 1 ∈ acc 1} := by
+      ext s ; simp ; tauto
+    have h_compl : {s : (AutomatonInter2 M acc).State | s.2 = 0}ᶜ = {s | s.2 = 1} := by
+      ext s ; simp
+      constructor
+      · exact Fin.eq_one_of_neq_zero s.2
+      . intro h ; simp [h]
+    rw [h_inter, h_compl]
+    apply leads_to_until_frequently_2 (h2 := h_inf1)
+    sorry
 
 theorem accepted_omega_lang_inter2 :
     AcceptedOmegaLang (AutomatonInter2 M acc) (AutomatonInter2_Acc M acc) = ⋂ i : Fin 2, AcceptedOmegaLang (M i) (acc i) := by

@@ -16,7 +16,7 @@ open BigOperators Function Filter Set Sigma
 
 universe u v w
 
-section Sequence
+section Sequences
 
 def AppendInf {X : Type*} (xl : List X) (xs : ℕ → X) : ℕ → X :=
   fun k ↦ if h : k < xl.length then xl[k] else xs (k - xl.length)
@@ -109,7 +109,7 @@ theorem frequently_leads_to_frequently {p q : Set X}
   · omega
   · assumption
 
-end Sequence
+end Sequences
 
 section Automata
 

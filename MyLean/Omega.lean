@@ -4,6 +4,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Ching-Tsun Chou
 -/
 
+/- ****************************************************************************
+  This file is OBSOLETE.  Automato Theory is now in the following repo:
+  https://github.com/ctchou/AutomataTheory.git
+**************************************************************************** -/
+
 import Mathlib.Data.Set.Card
 import Mathlib.Data.Fin.Basic
 import Mathlib.Data.List.Basic

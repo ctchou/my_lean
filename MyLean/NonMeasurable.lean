@@ -4,11 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Ching-Tsun Chou <chingtsun.chou@gmail.com>
 -/
 
-import Mathlib.Tactic
-import Mathlib.Util.Delaborators
-import Batteries.Tactic.Instances
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
-import Mathlib.MeasureTheory.Measure.NullMeasurable
 
 set_option warningAsError false
 
@@ -214,7 +210,7 @@ lemma vitaliUnion_lower_bound : Icc 0 1 ⊆ vitaliUnion := by
   have h_xy2 : x - y ∈ Icc (-1) 1 := by
     simp only [mem_Icc] at h_x1 h_y1 ⊢
     constructor <;> linarith
-  simp only [vitaliUnion, image_add_right, mem_iUnion, mem_preimage, exists_prop]
+  simp only [vitaliUnion, mem_iUnion, exists_prop]
   use (x - y)
   constructor
   . rw [vI, mem_inter_iff]
